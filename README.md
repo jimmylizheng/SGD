@@ -1,9 +1,14 @@
-# WebGL 3D Gaussian Splatting Renderer
+# SGD: Scalable Gaussian Delivery for 3D Scene Transmission
 
-Javascript and WebGL2 implementation of a 3D gaussian rasterizer based on the paper [3D Gaussian Splatting
+This is the git repo for the implementation of the CSE589 course project: SGD: Scalable Gaussian Delivery for 3D Scene Transmission. The implementation is based on the previous [3D Gaussian Splatting Web Viewer](https://github.com/kishimisu/Gaussian-Splatting-WebGL). Javascript and WebGL2 are used for the implementation of a 3D gaussian rasterizer based on the paper [3D Gaussian Splatting
 for Real-Time Radiance Field Rendering](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/).
 
-I tried to match as closely as possible the original C++/CUDA implementation (which is split into multiple repositories) so that the question "where are these calculations coming from?" can easily be answered when looking through the code.
+## Quick Start
+Clone the project to your local local machine.
+
+Run the command "python3 -m http.server 8000" in your CLI.
+
+Access the rendering result through "http://localhost:8000/"
 
 ## Live Demo
 
