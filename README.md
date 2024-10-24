@@ -4,7 +4,7 @@ This is the git repo for the implementation of the CSE589 course project: SGD: S
 for Real-Time Radiance Field Rendering](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/).
 
 ## Quick Start
-Clone the project to your local local machine.
+Clone the project to your local machine.
 
 Run the command "python3 -m http.server 8000" in your CLI.
 

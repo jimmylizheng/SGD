@@ -113,8 +113,35 @@ async function loadPly(content) {
     }
 
     console.log(`Loaded ${gaussianCount} gaussians in ${((performance.now() - start)/1000).toFixed(3)}s`)
+
+    // Download the processed gaussian data
+    // Package the gaussian data for download
+    const gaussianData = {
+        // positions,  
+        opacities,  
+        // colors,     
+        // cov3Ds      
+    };
+
+    // Use the downloadData function to save the processed data
+    downloadData(gaussianData, 'gaussian_data.json');
+    // to stop the download, comment out the above line
     
     return { positions, opacities, colors, cov3Ds }
+}
+
+
+// helper function to download the processed Gaussian Splats' data
+function downloadData(data, filename = 'data.json') {
+    const json = JSON.stringify(data);
+    const blob = new Blob([json], { type: 'application/json' });
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Converts scale and rotation properties of each
