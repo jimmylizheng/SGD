@@ -1,1 +1,3 @@
 ./tmp_data
+/room.ply
+git rm --cached room.ply

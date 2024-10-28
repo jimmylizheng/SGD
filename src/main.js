@@ -118,35 +118,37 @@ async function loadScene({scene, file}) {
     if (cam) cam.disableMovement = true
     document.querySelector('#loading-container').style.opacity = 1
 
-    let reader, contentLength
+    let responseData
 
     // Create a StreamableReader from a URL Response object
     if (scene != null) {
-        scene = scene.split('(')[0].trim()
-        const url = `https://huggingface.co/kishimisu/3d-gaussian-splatting-webgl/resolve/main/${scene}.ply`
-        const response = await fetch(url)
-        contentLength = parseInt(response.headers.get('content-length'))
-        reader = response.body.getReader()
+        console.log(scene); // 使用 console.log 而不是 print
+        scene = scene.split('(')[0].trim();
+        console.log(scene); // 使用 console.log 而不是 print
+        const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // 明确指定端口
+    
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Error fetching scene data from Flask');
+            const responseData = await response.json(); // 直接获取 JSON 数据
+            console.log(responseData); // 输出返回的数据
+        } catch (error) {
+            console.error('Error loading scene:', error);
+            return;
+        }
     }
-    // Create a StreamableReader from a File object
-    else if (file != null) {
+     else if (file != null) {
         contentLength = file.size
         reader = file.stream().getReader()
         settings.scene = 'custom'
-    }
-    else
+    } else {
         throw new Error('No scene or file specified')
-
-    // Download .ply file and monitor the progress
-    const content = await downloadPly(reader, contentLength)
-
-    // Load and pre-process gaussian data from .ply file
-    const data = await loadPly(content.buffer)
-
+    }
     // Send gaussian data to the worker
-    worker.postMessage({ gaussians: {
-        ...data, count: gaussianCount
-    } })
+    worker.postMessage({ gaussians: responseData }) 
+    // worker.postMessage({ gaussians: {
+    //     ...data, count: gaussianCount
+    // } })
 
     // Setup camera
     const cameraParameters = scene ? defaultCameraParameters[scene] : {}
