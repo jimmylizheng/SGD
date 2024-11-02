@@ -133,7 +133,10 @@ async function loadScene({scene, file}) {
             if (!response.ok) throw new Error('Error fetching scene data from Flask');
             const responseData = await response.json(); // 直接获取 JSON 数据
             console.log(responseData); // 输出返回的数据
-            worker.postMessage({ gaussians: responseData }) 
+            gaussianCount = responseData.gaussians.count // ?? question here
+            sceneMin = responseData.gaussians.sceneMin
+            sceneMax = responseData.gaussians.sceneMax
+            worker.postMessage( responseData ) 
             //gaussianCount = responseData.count
         } catch (error) {
             console.error('Error loading scene:', error);
@@ -152,6 +155,7 @@ async function loadScene({scene, file}) {
     // worker.postMessage({ gaussians: {
     //     ...data, count: gaussianCount
     // } })
+    
 
     // Setup camera
     const cameraParameters = scene ? defaultCameraParameters[scene] : {}
@@ -208,8 +212,11 @@ function render(width, height, res) {
     gl.uniform1f(gl.getUniformLocation(program, 'tan_fovx'), tan_fovx)
     gl.uniform1f(gl.getUniformLocation(program, 'tan_fovy'), tan_fovy)
     gl.uniform1f(gl.getUniformLocation(program, 'scale_modifier'), settings.scalingModifier)
-    gl.uniform3fv(gl.getUniformLocation(program, 'boxmin'), sceneMin)
-    gl.uniform3fv(gl.getUniformLocation(program, 'boxmax'), sceneMax)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'boxmin'), sceneMin)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'boxmax'), sceneMax)
+    gl.uniform3fv(gl.getUniformLocation(program, 'boxmin'), new Float32Array(sceneMin));
+    gl.uniform3fv(gl.getUniformLocation(program, 'boxmax'), new Float32Array(sceneMax));
+
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projmatrix'), false, cam.vpm)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'viewmatrix'), false, cam.vm)
 
