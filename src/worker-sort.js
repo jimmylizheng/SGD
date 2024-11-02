@@ -3,8 +3,11 @@ let gaussians
 let depthIndex
 
 onmessage = function(event) {
+    console.log("[Worker] Received message:", event.data);
+    console.log("On message")
     // Init web worker event
     if (event.data.gaussians) {
+        console.log(" Enter if statement!!")
         gaussians = event.data.gaussians
         gaussians.totalCount = gaussians.count
 

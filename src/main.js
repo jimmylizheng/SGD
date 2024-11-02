@@ -128,10 +128,13 @@ async function loadScene({scene, file}) {
         const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // 明确指定端口
     
         try {
+            console.log("Reach here");
             const response = await fetch(url);
             if (!response.ok) throw new Error('Error fetching scene data from Flask');
             const responseData = await response.json(); // 直接获取 JSON 数据
             console.log(responseData); // 输出返回的数据
+            worker.postMessage({ gaussians: responseData }) 
+            //gaussianCount = responseData.count
         } catch (error) {
             console.error('Error loading scene:', error);
             return;
@@ -145,7 +148,7 @@ async function loadScene({scene, file}) {
         throw new Error('No scene or file specified')
     }
     // Send gaussian data to the worker
-    worker.postMessage({ gaussians: responseData }) 
+    
     // worker.postMessage({ gaussians: {
     //     ...data, count: gaussianCount
     // } })
