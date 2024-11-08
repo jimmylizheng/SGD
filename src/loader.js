@@ -179,6 +179,10 @@ function computeCov3D(scale, mod, rot) {
     mat3.multiply(Sigma, mat3.transpose(tmp, M), M)  // Sigma = transpose(M) * M
 
     // Covariance is symmetric, only store upper right
+    //0 1 2 
+    //3 4 5
+    //6 7 8
+    
     const cov3D = [
         Sigma[0], Sigma[1], Sigma[2],
         Sigma[4], Sigma[5], Sigma[8]

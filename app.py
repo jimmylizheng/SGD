@@ -110,12 +110,15 @@ def load_scene():
         opacity_raw = struct.unpack_from('<f', content, offset + (6 + 48) * 4)[0]
         scale = struct.unpack_from('<fff', content, offset + (6 + 49) * 4)
         rotation = struct.unpack_from('<ffff', content, offset + (6 + 52) * 4)
-
         # Normalize quaternion
         rotation = np.array(rotation) / np.linalg.norm(rotation)
 
         # Convert scale and rotation to covariance
         scale = np.exp(scale)
+
+        if i == 0:
+            print("First iteration - rotation:", rotation)
+            print("First iteration - scale (before exp):", scale)   
         cov3d = compute_cov3d(scale, 1, rotation)
 
         # Activate opacity
