@@ -110,11 +110,24 @@ def load_scene():
         opacity_raw = struct.unpack_from('<f', content, offset + (6 + 48) * 4)[0]
         scale = struct.unpack_from('<fff', content, offset + (6 + 49) * 4)
         rotation = struct.unpack_from('<ffff', content, offset + (6 + 52) * 4)
-        # Normalize quaternion
-        rotation = np.array(rotation) / np.linalg.norm(rotation)
+        # # Normalize quaternion
+        # rotation = np.array(rotation) / np.linalg.norm(rotation)
 
-        # Convert scale and rotation to covariance
-        scale = np.exp(scale)
+        # # Convert scale and rotation to covariance
+        # scale = np.exp(scale)
+
+        
+        # 将 rotation 和 scale 转换为 float32 类型以匹配 JS 的 Float32Array
+        rotation = np.array(rotation, dtype=np.float32)
+        scale = np.array(scale, dtype=np.float32)
+        # Normalize quaternion (手动实现与 JS 更接近)
+        length2 = np.sum(rotation * rotation)
+        length = np.sqrt(length2).astype(np.float32)  # 保证长度也是 float32
+        rotation = rotation / length
+        scale = np.exp(scale).astype(np.float32)
+       
+
+
 
         if i == 0:
             print("First iteration - rotation:", rotation)
@@ -145,13 +158,14 @@ def load_scene():
     positions_list = positions.tolist()
     scene_min_list = scene_min.tolist()
     scene_max_list = scene_max.tolist()
+    cov3ds_list = [float(value) for value in cov3ds]
 
     # Package processed data
     print("successfully processed data")
     return jsonify({
         'gaussians': {
             'colors': colors_list,
-            'cov3Ds': cov3ds,
+            'cov3Ds': cov3ds_list,
             'opacities':opacities_list,
             'positions':positions_list,
             'count': gaussian_count,
