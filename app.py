@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response 
 from io import BytesIO
 import numpy as np
 import struct
 import json
 import os
+import time
 
 app = Flask(__name__)
 from flask_cors import CORS
@@ -11,6 +12,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # 允许所有跨域请求
 
+scene_min = np.array([float('inf')] * 3)
+scene_max = np.array([-float('inf')] * 3)
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -100,8 +103,7 @@ def load_scene():
     colors = np.zeros(3 * gaussian_count)  # 3倍长度
     cov3ds = []  # 6倍长度
     positions = np.zeros(3 * gaussian_count)  # 3倍长度
-    scene_min = np.array([float('inf')] * 3)
-    scene_max = np.array([-float('inf')] * 3)
+    
 
     for i in range(gaussian_count):
         offset = header_end + i * num_props * 4
@@ -150,29 +152,61 @@ def load_scene():
         # 将 covariance 填充到一维数组中
         cov3ds.extend(cov3d)
 
-        scene_min = np.minimum(scene_min, position)
-        scene_max = np.maximum(scene_max, position)
+    def generate_batches(batch_size, gaussian_count):
+        global scene_min, scene_max  # 声明这些变量是全局的
+        # 数据解析，逐批次返回
+        print(batch_size)
+        print(gaussian_count)
+        num_batches = (gaussian_count + batch_size - 1) // batch_size  # 向上取整
+        print(f"Total batches: {num_batches}")
 
-    opacities_list = opacities.tolist()
-    colors_list = colors.tolist()
-    positions_list = positions.tolist()
-    scene_min_list = scene_min.tolist()
-    scene_max_list = scene_max.tolist()
-    cov3ds_list = [float(value) for value in cov3ds]
+        for batch_index in range(num_batches):  # 依据总批次数循环
+            start_index = batch_index * batch_size
+            # 确保最后一个批次的结束索引不会超过总数据量
+            end_index = min(start_index + batch_size, gaussian_count)
 
-    # Package processed data
-    print("successfully processed data")
-    return jsonify({
-        'gaussians': {
-            'colors': colors_list,
-            'cov3Ds': cov3ds_list,
-            'opacities':opacities_list,
-            'positions':positions_list,
-            'count': gaussian_count,
-            'sceneMin': scene_min_list,
-            'sceneMax': scene_max_list
-        },  # 这里是四个数组
-    })
+            # 获取每一批次的数据
+            opacities_batch = opacities[start_index:end_index].tolist()
+            colors_batch = colors[3 * start_index: 3 * end_index].tolist()
+            positions_batch = positions[3 * start_index: 3 * end_index]
+            cov3ds_batch = cov3ds[6 * start_index: 6 * end_index]
+            cov3ds_batch = [float(value) for value in cov3ds_batch]
+
+            # 得到当前batch 的scene min和 scebe nax
+            for position in positions_batch:
+                scene_min = np.minimum(scene_min, position)
+                scene_max = np.maximum(scene_max, position)
+            scene_min_batch = scene_min.tolist()
+            scene_max_batch = scene_max.tolist()
+            print('scenemin',scene_min)
+            print(scene_min_batch)
+
+            positions_batch = positions_batch.tolist()
+
+            # 更新 count，表示已发送的点数
+            count = end_index - start_index
+
+            # 构造数据并通过 SSE 向客户端推送
+            data = {
+                'gaussians': {
+                    'colors': colors_batch,
+                    'cov3Ds': cov3ds_batch,
+                    'opacities': opacities_batch,
+                    'positions': positions_batch,
+                    'count': count,  # 当前批次发送的高斯点数
+                    'sceneMin': scene_min_batch,
+                    'sceneMax': scene_max_batch
+                }
+            }
+            
+            yield f"data: {json.dumps(data)}\n\n"
+            
+            # 控制每次返回的时间间隔（根据需求调整）
+            time.sleep(2)
+
+    # 假设数据已经准备好，调用该函数生成批次
+    return Response(generate_batches(gaussian_count // 5, gaussian_count), content_type='text/event-stream')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

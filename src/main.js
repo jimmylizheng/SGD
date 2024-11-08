@@ -13,6 +13,17 @@ let sceneMin, sceneMax
 let gizmoRenderer = new GizmoRenderer()
 let positionBuffer, positionData, opacityData
 
+let allGaussians = {
+    gaussians: {
+        colors: [],
+        cov3Ds: [],
+        opacities: [],
+        positions: [],
+        count: 0,
+    }
+};
+
+
 const settings = {
     scene: 'room',
     renderResolution: 0.2,
@@ -118,7 +129,9 @@ async function loadScene({scene, file}) {
     if (cam) cam.disableMovement = true
     document.querySelector('#loading-container').style.opacity = 1
 
-    let responseData
+    
+    sceneMin = new Array(3).fill(Infinity)
+    sceneMax = new Array(3).fill(-Infinity)
 
     // Create a StreamableReader from a URL Response object
     if (scene != null) {
@@ -126,18 +139,59 @@ async function loadScene({scene, file}) {
         scene = scene.split('(')[0].trim();
         console.log(scene); // 使用 console.log 而不是 print
         const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // 明确指定端口
-    
+        
         try {
             console.log("Reach here");
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Error fetching scene data from Flask');
-            const responseData = await response.json(); // 直接获取 JSON 数据
-            console.log(responseData); // 输出返回的数据
-            gaussianCount = responseData.gaussians.count // ?? question here
-            sceneMin = responseData.gaussians.sceneMin
-            sceneMax = responseData.gaussians.sceneMax
-            worker.postMessage( responseData ) 
-            //gaussianCount = responseData.count
+    
+            // 使用 EventSource 来处理 SSE 流
+            const eventSource = new EventSource(url);
+            
+            eventSource.onmessage = function(event) {
+                // 这里每次收到一批数据
+                const responseData = JSON.parse(event.data);
+                console.log(responseData); // 输出返回的数据
+    
+                // 累加新的数据到现有数据
+                allGaussians.gaussians.count += responseData.gaussians.count;
+                allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
+                allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
+                allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
+                allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
+
+                gaussianCount = allGaussians.gaussians.count // ?? question here
+                 // **更新每个批次的 sceneMin 和 sceneMax**
+                 sceneMin = responseData.gaussians.sceneMin
+                 sceneMax = responseData.gaussians.sceneMax
+
+                // 输出调试信息
+                console.log("Updated sceneMin:", sceneMin);
+                console.log("Updated sceneMax:", sceneMax);
+    
+                // 在这里处理从后端接收到的场景数据
+                worker.postMessage(allGaussians); // 将累积的数据发送到 Web Worker
+                const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+                if (cam == null) cam = new Camera(cameraParameters)
+                else cam.setParameters(cameraParameters)
+                cam.update()
+
+                // Update GUI
+                settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
+                maxGaussianController.max(gaussianCount)
+                maxGaussianController.updateDisplay()
+            };
+    
+            // eventSource.onerror = function(event) {
+            //     // 处理连接出错的情况
+            //     console.error('Error occurred in SSE stream:', event);
+            //     eventSource.close();
+            // };
+    
+            eventSource.onopen = function() {
+                console.log('SSE connection established');
+            };
+
+            // Setup camera
+    
         } catch (error) {
             console.error('Error loading scene:', error);
             return;
@@ -157,16 +211,7 @@ async function loadScene({scene, file}) {
     // } })
     
 
-    // Setup camera
-    const cameraParameters = scene ? defaultCameraParameters[scene] : {}
-    if (cam == null) cam = new Camera(cameraParameters)
-    else cam.setParameters(cameraParameters)
-    cam.update()
-
-    // Update GUI
-    settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
-    maxGaussianController.max(gaussianCount)
-    maxGaussianController.updateDisplay()
+    
 }
 
 function requestRender(...params) {
