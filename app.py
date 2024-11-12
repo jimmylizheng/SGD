@@ -10,7 +10,7 @@ app = Flask(__name__)
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # 允许所有跨域请求
+CORS(app)  # allow cross domain request?
 
 scene_min = np.array([float('inf')] * 3)
 scene_max = np.array([-float('inf')] * 3)
@@ -41,13 +41,13 @@ def compute_cov3d(scale, mod, rot):
 @app.route('/api/load_scene', methods=['GET'])
 def load_scene():
     
-    # 获取查询参数中的 scene 名称
+    # get the name of the scene from the args of the request
     scene = request.args.get('scene')
     print("Msg Recd", scene)
     if not scene:
         return jsonify({"error": "Scene parameter is required"}), 400
 
-    # 构建文件路径
+    # construct the file name
     filename = f"{scene}.ply"
     if not os.path.exists(filename):
         return jsonify({"error": f"File '{filename}' not found"}), 404
@@ -98,11 +98,11 @@ def load_scene():
     #     colors = np.append(colors, color)
     #     cov3ds = np.append(cov3ds, cov3d)
     #     positions = np.append(positions, position)
-    # 预先分配数组
+    # pre allocate array
     opacities = np.zeros(gaussian_count)
-    colors = np.zeros(3 * gaussian_count)  # 3倍长度
-    cov3ds = []  # 6倍长度
-    positions = np.zeros(3 * gaussian_count)  # 3倍长度
+    colors = np.zeros(3 * gaussian_count)  # 3*length
+    cov3ds = []  # 6*length
+    positions = np.zeros(3 * gaussian_count)  # 3*length
     
 
     for i in range(gaussian_count):
@@ -119,16 +119,14 @@ def load_scene():
         # scale = np.exp(scale)
 
         
-        # 将 rotation 和 scale 转换为 float32 类型以匹配 JS 的 Float32Array
+        # transform rotation and scale to float32 type to match JS's Float32Array in the original code
         rotation = np.array(rotation, dtype=np.float32)
         scale = np.array(scale, dtype=np.float32)
-        # Normalize quaternion (手动实现与 JS 更接近)
+        # Normalize quaternion (manual computation to realize more similar function as JS's)
         length2 = np.sum(rotation * rotation)
-        length = np.sqrt(length2).astype(np.float32)  # 保证长度也是 float32
+        length = np.sqrt(length2).astype(np.float32)  # ensure that the length is float32
         rotation = rotation / length
         scale = np.exp(scale).astype(np.float32)
-       
-
 
 
         if i == 0:
@@ -143,18 +141,18 @@ def load_scene():
         sh_c0 = 0.28209479177387814
         color = [0.5 + sh_c0 * harmonic[0], 0.5 + sh_c0 * harmonic[1], 0.5 + sh_c0 * harmonic[2]]
 
-        # 填充数组
+        # fill the opacity array
         opacities[i] = opacity
 
-        # 将颜色和位置填充到一维数组中
+        # fill the color and position array
         colors[3 * i: 3 * (i + 1)] = color
         positions[3 * i: 3 * (i + 1)] = position
-        # 将 covariance 填充到一维数组中
+        # fill the covariance array
         cov3ds.extend(cov3d)
 
     def generate_batches(batch_size, gaussian_count):
-        global scene_min, scene_max  # 声明这些变量是全局的
-        # 数据解析，逐批次返回
+        global scene_min, scene_max  # global variable
+        # analyze the data and returned in batches
         print(batch_size)
         print(gaussian_count)
         num_batches = (gaussian_count + batch_size - 1) // batch_size  # number of batches, round up
@@ -184,10 +182,10 @@ def load_scene():
 
             positions_batch = positions_batch.tolist()
 
-            # 更新 count，表示已发送的点数
+            # update count，stands for the number of points that is already sent
             count = end_index - start_index
 
-            # 构造数据并通过 SSE 向客户端推送
+            # construct data and send the data to the client through SSE
             data = {
                 'gaussians': {
                     'colors': colors_batch,
@@ -203,10 +201,10 @@ def load_scene():
             
             yield f"data: {json.dumps(data)}\n\n"
             
-            # 控制每次返回的时间间隔（根据需求调整）
-            time.sleep(2)
+            # control the time interval of sending each request
+            time.sleep(12)
 
-    # 假设数据已经准备好，调用该函数生成批次
+    # assuming that the data is processed, call the function to generate the batches
     return Response(generate_batches(gaussian_count // 5, gaussian_count), content_type='text/event-stream')
 
 
