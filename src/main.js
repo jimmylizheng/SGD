@@ -167,7 +167,12 @@ async function loadScene({scene, file}) {
                 // debug info
                 console.log("Updated sceneMin:", sceneMin);
                 console.log("Updated sceneMax:", sceneMax);
-    
+
+                console.log("debug position:", allGaussians.gaussians.positions[0]);
+                console.log("debug opacities:", allGaussians.gaussians.opacities[0]);
+                console.log("debug colors:", allGaussians.gaussians.colors[0]);
+                console.log("debug cov3Ds:", allGaussians.gaussians.cov3Ds[0]);
+
                 // process the received 3DGS data
                 worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
                 const cameraParameters = scene ? defaultCameraParameters[scene] : {}
@@ -224,7 +229,6 @@ async function loadScene({scene, file}) {
     // } })
     
 
-    
 }
 
 function requestRender(...params) {
