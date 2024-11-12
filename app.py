@@ -130,8 +130,32 @@ def load_scene():
 
 
         if i == 0:
-            print("First iteration - rotation:", rotation)
-            print("First iteration - scale (before exp):", scale)   
+            # print("First iteration - rotation:", rotation)
+            # print("First iteration - scale (before exp):", scale)   
+            print("First iteration - rotation: ", [f"{r:.20f}" for r in rotation])
+            print("First iteration - scale (after exp): ",[f"{r:.20f}" for r in scale])
+            # Compute scaling matrix
+            S = np.diag([1 * scale[0], 1 * scale[1], 1 * scale[2]])
+            print(f"First iteration - S: {S[0, 0]:.20f}")
+
+            # Quaternion to rotation matrix
+            r, x, y, z = rotation
+            print(f"First iteration - r: {r:.20f}")
+            print(f"First iteration - x: {x:.20f}")
+            print(f"First iteration - y: {y:.20f}")
+            print(f"First iteration - z: {z:.20f}")
+            R = np.array([
+                [1 - 2 * (y * y + z * z), 2 * (x * y - r * z), 2 * (x * z + r * y)],
+                [2 * (x * y + r * z), 1 - 2 * (x * x + z * z), 2 * (y * z - r * x)],
+                [2 * (x * z - r * y), 2 * (y * z + r * x), 1 - 2 * (x * x + y * y)]
+            ])
+            print(f"First iteration - R: {R[0, 0]:.20f}")
+
+            # Compute 3D world covariance matrix Sigma
+            M = S @ R
+            print(f"First iteration - M: {M[0, 0]:.20f}")
+            Sigma = M.T @ M
+            print(f"First iteration - Sigma: {Sigma[0, 0]:.20f}")
         cov3d = compute_cov3d(scale, 1, rotation)
 
         # Activate opacity
