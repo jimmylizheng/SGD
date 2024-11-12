@@ -135,23 +135,24 @@ async function loadScene({scene, file}) {
 
     // Create a StreamableReader from a URL Response object
     if (scene != null) {
-        console.log(scene); // 使用 console.log 而不是 print
+        console.log(scene);
         scene = scene.split('(')[0].trim();
-        console.log(scene); // 使用 console.log 而不是 print
-        const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // 明确指定端口
+        console.log(scene);
+        const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // specify the port
         
         try {
             console.log("Reach here");
     
-            // 使用 EventSource 来处理 SSE 流
+            // use EventSource to process SSE stream
             const eventSource = new EventSource(url);
             
+            // TODO: [Violation] 'message' handler took <N>ms
             eventSource.onmessage = function(event) {
-                // 这里每次收到一批数据
+                // parse the received data for each batch
                 const responseData = JSON.parse(event.data);
-                console.log(responseData); // 输出返回的数据
+                console.log(responseData); // log the returned data
     
-                // 累加新的数据到现有数据
+                // append new data to current data
                 allGaussians.gaussians.count += responseData.gaussians.count;
                 allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
                 allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
@@ -159,29 +160,41 @@ async function loadScene({scene, file}) {
                 allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
 
                 gaussianCount = allGaussians.gaussians.count // ?? question here
-                 // **更新每个批次的 sceneMin 和 sceneMax**
+                 // **update sceneMin and sceneMax for each batch**
                  sceneMin = responseData.gaussians.sceneMin
                  sceneMax = responseData.gaussians.sceneMax
 
-                // 输出调试信息
+                // debug info
                 console.log("Updated sceneMin:", sceneMin);
                 console.log("Updated sceneMax:", sceneMax);
     
-                // 在这里处理从后端接收到的场景数据
-                worker.postMessage(allGaussians); // 将累积的数据发送到 Web Worker
+                // process the received 3DGS data
+                worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
                 const cameraParameters = scene ? defaultCameraParameters[scene] : {}
                 if (cam == null) cam = new Camera(cameraParameters)
                 else cam.setParameters(cameraParameters)
                 cam.update()
 
                 // Update GUI
-                settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
+                // settings.maxGaussians controls the max number of splats to be rendered
+                if(settings.maxGaussians>gaussianCount){
+                    settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
+                }
+                else{
+                    settings.maxGaussians = Math.max(settings.maxGaussians, gaussianCount)
+                }
                 maxGaussianController.max(gaussianCount)
                 maxGaussianController.updateDisplay()
+
+                // close the event souorce
+                // if (someConditionToStopReceiving) {
+                //     eventSource.close();
+                //     console.log("EventSource connection closed.");
+                // }
             };
     
             // eventSource.onerror = function(event) {
-            //     // 处理连接出错的情况
+            //     // deal with the error situation
             //     console.error('Error occurred in SSE stream:', event);
             //     eventSource.close();
             // };

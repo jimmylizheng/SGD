@@ -157,22 +157,23 @@ def load_scene():
         # 数据解析，逐批次返回
         print(batch_size)
         print(gaussian_count)
-        num_batches = (gaussian_count + batch_size - 1) // batch_size  # 向上取整
+        num_batches = (gaussian_count + batch_size - 1) // batch_size  # number of batches, round up
         print(f"Total batches: {num_batches}")
 
-        for batch_index in range(num_batches):  # 依据总批次数循环
+        for batch_index in range(num_batches):  # loop to generate batches
             start_index = batch_index * batch_size
-            # 确保最后一个批次的结束索引不会超过总数据量
+            # ensure that the ending index will not exceed the total number of Gaussians
             end_index = min(start_index + batch_size, gaussian_count)
 
-            # 获取每一批次的数据
+            # Get the splat attributes data needed
             opacities_batch = opacities[start_index:end_index].tolist()
             colors_batch = colors[3 * start_index: 3 * end_index].tolist()
             positions_batch = positions[3 * start_index: 3 * end_index]
             cov3ds_batch = cov3ds[6 * start_index: 6 * end_index]
             cov3ds_batch = [float(value) for value in cov3ds_batch]
 
-            # 得到当前batch 的scene min和 scebe nax
+            # get the scene min and scebe max of current batch
+            # TODO: check the rendering pipeline of the usage of the scene min and scebe max
             for position in positions_batch:
                 scene_min = np.minimum(scene_min, position)
                 scene_max = np.maximum(scene_max, position)
@@ -193,7 +194,7 @@ def load_scene():
                     'cov3Ds': cov3ds_batch,
                     'opacities': opacities_batch,
                     'positions': positions_batch,
-                    'count': count,  # 当前批次发送的高斯点数
+                    'count': count,  # number of splats in the current batch
                     'sceneMin': scene_min_batch,
                     'sceneMax': scene_max_batch
                 }
