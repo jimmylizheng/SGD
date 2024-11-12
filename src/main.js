@@ -187,10 +187,10 @@ async function loadScene({scene, file}) {
                 maxGaussianController.updateDisplay()
 
                 // close the event souorce
-                // if (someConditionToStopReceiving) {
-                //     eventSource.close();
-                //     console.log("EventSource connection closed.");
-                // }
+                if (responseData.gaussians.total_gs_num<=gaussianCount) {
+                    eventSource.close();
+                    console.log("EventSource connection closed.");
+                }
             };
     
             // eventSource.onerror = function(event) {

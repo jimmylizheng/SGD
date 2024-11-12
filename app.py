@@ -196,7 +196,8 @@ def load_scene():
                     'positions': positions_batch,
                     'count': count,  # number of splats in the current batch
                     'sceneMin': scene_min_batch,
-                    'sceneMax': scene_max_batch
+                    'sceneMax': scene_max_batch,
+                    'total_gs_num':gaussian_count
                 }
             }
             

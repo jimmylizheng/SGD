@@ -6,9 +6,11 @@ for Real-Time Radiance Field Rendering](https://repo-sam.inria.fr/fungraph/3d-ga
 ## Quick Start
 Clone the project to your local machine.
 
-Run the command "python3 -m http.server 8000" in your CLI.
+Run the command "python3 app.py" in your CLI to launch the server.
 
-Access the rendering result through "http://localhost:8000/"
+Run the command "python3 -m http.server 8000" in your CLI to launch the client.
+
+Access the client rendering result through "http://localhost:8000/"
 
 ## Live Demo
 
