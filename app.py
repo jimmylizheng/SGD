@@ -31,8 +31,10 @@ def compute_cov3d(scale, mod, rot):
     ])
 
     # Compute 3D world covariance matrix Sigma
-    M = S @ R
-    Sigma = M.T @ M
+    # M = S @ R
+    M = R @ S
+    # Sigma = M.T @ M
+    Sigma = M @ M.T
 
     # Covariance is symmetric, only store upper triangular part
     cov3d = [Sigma[0, 0], Sigma[0, 1], Sigma[0, 2], Sigma[1, 1], Sigma[1, 2], Sigma[2, 2]]
@@ -129,67 +131,67 @@ def load_scene():
         scale = np.exp(scale).astype(np.float32)
 
 
-        if i == 0:
-            # print("First iteration - rotation:", rotation)
-            # print("First iteration - scale (before exp):", scale)   
-            print("First iteration - rotation: ", [f"{r:.20f}" for r in rotation])
-            print("First iteration - scale (after exp): ",[f"{r:.20f}" for r in scale])
-            # Compute scaling matrix
-            S = np.diag([1 * scale[0], 1 * scale[1], 1 * scale[2]])
-            print(f"First iteration - S0: {S[0, 0]:.20f}")
-            print(f"First iteration - S1: {S[0, 1]:.20f}")
-            print(f"First iteration - S2: {S[0, 2]:.20f}")
-            print(f"First iteration - S3: {S[1, 0]:.20f}")
-            print(f"First iteration - S4: {S[1, 1]:.20f}")
-            print(f"First iteration - S5: {S[1, 2]:.20f}")
-            print(f"First iteration - S6: {S[2, 0]:.20f}")
-            print(f"First iteration - S7: {S[2, 1]:.20f}")
-            print(f"First iteration - S8: {S[2, 2]:.20f}")
+        # if i == 0:
+        #     # print("First iteration - rotation:", rotation)
+        #     # print("First iteration - scale (before exp):", scale)   
+        #     print("First iteration - rotation: ", [f"{r:.20f}" for r in rotation])
+        #     print("First iteration - scale (after exp): ",[f"{r:.20f}" for r in scale])
+        #     # Compute scaling matrix
+        #     S = np.diag([1 * scale[0], 1 * scale[1], 1 * scale[2]])
+        #     print(f"First iteration - S0: {S[0, 0]:.20f}")
+        #     print(f"First iteration - S1: {S[0, 1]:.20f}")
+        #     print(f"First iteration - S2: {S[0, 2]:.20f}")
+        #     print(f"First iteration - S3: {S[1, 0]:.20f}")
+        #     print(f"First iteration - S4: {S[1, 1]:.20f}")
+        #     print(f"First iteration - S5: {S[1, 2]:.20f}")
+        #     print(f"First iteration - S6: {S[2, 0]:.20f}")
+        #     print(f"First iteration - S7: {S[2, 1]:.20f}")
+        #     print(f"First iteration - S8: {S[2, 2]:.20f}")
 
-            # Quaternion to rotation matrix
-            r, x, y, z = rotation
-            print(f"First iteration - r: {r:.20f}")
-            print(f"First iteration - x: {x:.20f}")
-            print(f"First iteration - y: {y:.20f}")
-            print(f"First iteration - z: {z:.20f}")
-            R = np.array([
-                [1 - 2 * (y * y + z * z), 2 * (x * y - r * z), 2 * (x * z + r * y)],
-                [2 * (x * y + r * z), 1 - 2 * (x * x + z * z), 2 * (y * z - r * x)],
-                [2 * (x * z - r * y), 2 * (y * z + r * x), 1 - 2 * (x * x + y * y)]
-            ])
-            print(f"First iteration - R0: {R[0, 0]:.20f}")
-            print(f"First iteration - R1: {R[0, 1]:.20f}")
-            print(f"First iteration - R2: {R[0, 2]:.20f}")
-            print(f"First iteration - R3: {R[1, 0]:.20f}")
-            print(f"First iteration - R4: {R[1, 1]:.20f}")
-            print(f"First iteration - R5: {R[1, 2]:.20f}")
-            print(f"First iteration - R6: {R[2, 0]:.20f}")
-            print(f"First iteration - R7: {R[2, 1]:.20f}")
-            print(f"First iteration - R8: {R[2, 2]:.20f}")
+        #     # Quaternion to rotation matrix
+        #     r, x, y, z = rotation
+        #     print(f"First iteration - r: {r:.20f}")
+        #     print(f"First iteration - x: {x:.20f}")
+        #     print(f"First iteration - y: {y:.20f}")
+        #     print(f"First iteration - z: {z:.20f}")
+        #     R = np.array([
+        #         [1 - 2 * (y * y + z * z), 2 * (x * y - r * z), 2 * (x * z + r * y)],
+        #         [2 * (x * y + r * z), 1 - 2 * (x * x + z * z), 2 * (y * z - r * x)],
+        #         [2 * (x * z - r * y), 2 * (y * z + r * x), 1 - 2 * (x * x + y * y)]
+        #     ])
+        #     print(f"First iteration - R0: {R[0, 0]:.20f}")
+        #     print(f"First iteration - R1: {R[0, 1]:.20f}")
+        #     print(f"First iteration - R2: {R[0, 2]:.20f}")
+        #     print(f"First iteration - R3: {R[1, 0]:.20f}")
+        #     print(f"First iteration - R4: {R[1, 1]:.20f}")
+        #     print(f"First iteration - R5: {R[1, 2]:.20f}")
+        #     print(f"First iteration - R6: {R[2, 0]:.20f}")
+        #     print(f"First iteration - R7: {R[2, 1]:.20f}")
+        #     print(f"First iteration - R8: {R[2, 2]:.20f}")
 
-            # Compute 3D world covariance matrix Sigma
-            # M = S @ R
-            M = R @ S
-            print(f"First iteration - M0: {M[0, 0]:.20f}")
-            print(f"First iteration - M1: {M[0, 1]:.20f}")
-            print(f"First iteration - M2: {M[0, 2]:.20f}")
-            print(f"First iteration - M3: {M[1, 0]:.20f}")
-            print(f"First iteration - M4: {M[1, 1]:.20f}")
-            print(f"First iteration - M5: {M[1, 2]:.20f}")
-            print(f"First iteration - M6: {M[2, 0]:.20f}")
-            print(f"First iteration - M7: {M[2, 1]:.20f}")
-            print(f"First iteration - M8: {M[2, 2]:.20f}")
-            # Sigma = M.T @ M
-            Sigma = M @ M.T
-            print(f"First iteration - Sigma0: {Sigma[0, 0]:.20f}")
-            print(f"First iteration - Sigma1: {Sigma[0, 1]:.20f}")
-            print(f"First iteration - Sigma2: {Sigma[0, 2]:.20f}")
-            print(f"First iteration - Sigma3: {Sigma[1, 0]:.20f}")
-            print(f"First iteration - Sigma4: {Sigma[1, 1]:.20f}")
-            print(f"First iteration - Sigma5: {Sigma[1, 2]:.20f}")
-            print(f"First iteration - Sigma6: {Sigma[2, 0]:.20f}")
-            print(f"First iteration - Sigma7: {Sigma[2, 1]:.20f}")
-            print(f"First iteration - Sigma8: {Sigma[2, 2]:.20f}")
+        #     # Compute 3D world covariance matrix Sigma
+        #     # M = S @ R
+        #     M = R @ S
+        #     print(f"First iteration - M0: {M[0, 0]:.20f}")
+        #     print(f"First iteration - M1: {M[0, 1]:.20f}")
+        #     print(f"First iteration - M2: {M[0, 2]:.20f}")
+        #     print(f"First iteration - M3: {M[1, 0]:.20f}")
+        #     print(f"First iteration - M4: {M[1, 1]:.20f}")
+        #     print(f"First iteration - M5: {M[1, 2]:.20f}")
+        #     print(f"First iteration - M6: {M[2, 0]:.20f}")
+        #     print(f"First iteration - M7: {M[2, 1]:.20f}")
+        #     print(f"First iteration - M8: {M[2, 2]:.20f}")
+        #     # Sigma = M.T @ M
+        #     Sigma = M @ M.T
+        #     print(f"First iteration - Sigma0: {Sigma[0, 0]:.20f}")
+        #     print(f"First iteration - Sigma1: {Sigma[0, 1]:.20f}")
+        #     print(f"First iteration - Sigma2: {Sigma[0, 2]:.20f}")
+        #     print(f"First iteration - Sigma3: {Sigma[1, 0]:.20f}")
+        #     print(f"First iteration - Sigma4: {Sigma[1, 1]:.20f}")
+        #     print(f"First iteration - Sigma5: {Sigma[1, 2]:.20f}")
+        #     print(f"First iteration - Sigma6: {Sigma[2, 0]:.20f}")
+        #     print(f"First iteration - Sigma7: {Sigma[2, 1]:.20f}")
+        #     print(f"First iteration - Sigma8: {Sigma[2, 2]:.20f}")
         cov3d = compute_cov3d(scale, 1, rotation)
 
         # Activate opacity
@@ -264,7 +266,8 @@ def load_scene():
             time.sleep(2)
 
     # assuming that the data is processed, call the function to generate the batches
-    return Response(generate_batches(gaussian_count // 5, gaussian_count), content_type='text/event-stream')
+    batch_num=5
+    return Response(generate_batches(gaussian_count // batch_num, gaussian_count), content_type='text/event-stream')
 
 
 if __name__ == '__main__':
