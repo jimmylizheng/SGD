@@ -136,7 +136,15 @@ def load_scene():
             print("First iteration - scale (after exp): ",[f"{r:.20f}" for r in scale])
             # Compute scaling matrix
             S = np.diag([1 * scale[0], 1 * scale[1], 1 * scale[2]])
-            print(f"First iteration - S: {S[0, 0]:.20f}")
+            print(f"First iteration - S0: {S[0, 0]:.20f}")
+            print(f"First iteration - S1: {S[0, 1]:.20f}")
+            print(f"First iteration - S2: {S[0, 2]:.20f}")
+            print(f"First iteration - S3: {S[1, 0]:.20f}")
+            print(f"First iteration - S4: {S[1, 1]:.20f}")
+            print(f"First iteration - S5: {S[1, 2]:.20f}")
+            print(f"First iteration - S6: {S[2, 0]:.20f}")
+            print(f"First iteration - S7: {S[2, 1]:.20f}")
+            print(f"First iteration - S8: {S[2, 2]:.20f}")
 
             # Quaternion to rotation matrix
             r, x, y, z = rotation
@@ -149,13 +157,39 @@ def load_scene():
                 [2 * (x * y + r * z), 1 - 2 * (x * x + z * z), 2 * (y * z - r * x)],
                 [2 * (x * z - r * y), 2 * (y * z + r * x), 1 - 2 * (x * x + y * y)]
             ])
-            print(f"First iteration - R: {R[0, 0]:.20f}")
+            print(f"First iteration - R0: {R[0, 0]:.20f}")
+            print(f"First iteration - R1: {R[0, 1]:.20f}")
+            print(f"First iteration - R2: {R[0, 2]:.20f}")
+            print(f"First iteration - R3: {R[1, 0]:.20f}")
+            print(f"First iteration - R4: {R[1, 1]:.20f}")
+            print(f"First iteration - R5: {R[1, 2]:.20f}")
+            print(f"First iteration - R6: {R[2, 0]:.20f}")
+            print(f"First iteration - R7: {R[2, 1]:.20f}")
+            print(f"First iteration - R8: {R[2, 2]:.20f}")
 
             # Compute 3D world covariance matrix Sigma
-            M = S @ R
-            print(f"First iteration - M: {M[0, 0]:.20f}")
-            Sigma = M.T @ M
-            print(f"First iteration - Sigma: {Sigma[0, 0]:.20f}")
+            # M = S @ R
+            M = R @ S
+            print(f"First iteration - M0: {M[0, 0]:.20f}")
+            print(f"First iteration - M1: {M[0, 1]:.20f}")
+            print(f"First iteration - M2: {M[0, 2]:.20f}")
+            print(f"First iteration - M3: {M[1, 0]:.20f}")
+            print(f"First iteration - M4: {M[1, 1]:.20f}")
+            print(f"First iteration - M5: {M[1, 2]:.20f}")
+            print(f"First iteration - M6: {M[2, 0]:.20f}")
+            print(f"First iteration - M7: {M[2, 1]:.20f}")
+            print(f"First iteration - M8: {M[2, 2]:.20f}")
+            # Sigma = M.T @ M
+            Sigma = M @ M.T
+            print(f"First iteration - Sigma0: {Sigma[0, 0]:.20f}")
+            print(f"First iteration - Sigma1: {Sigma[0, 1]:.20f}")
+            print(f"First iteration - Sigma2: {Sigma[0, 2]:.20f}")
+            print(f"First iteration - Sigma3: {Sigma[1, 0]:.20f}")
+            print(f"First iteration - Sigma4: {Sigma[1, 1]:.20f}")
+            print(f"First iteration - Sigma5: {Sigma[1, 2]:.20f}")
+            print(f"First iteration - Sigma6: {Sigma[2, 0]:.20f}")
+            print(f"First iteration - Sigma7: {Sigma[2, 1]:.20f}")
+            print(f"First iteration - Sigma8: {Sigma[2, 2]:.20f}")
         cov3d = compute_cov3d(scale, 1, rotation)
 
         # Activate opacity
@@ -173,6 +207,7 @@ def load_scene():
         positions[3 * i: 3 * (i + 1)] = position
         # fill the covariance array
         cov3ds.extend(cov3d)
+    print("finish preprocessing")
 
     def generate_batches(batch_size, gaussian_count):
         global scene_min, scene_max  # global variable
@@ -226,7 +261,7 @@ def load_scene():
             yield f"data: {json.dumps(data)}\n\n"
             
             # control the time interval of sending each request
-            time.sleep(12)
+            time.sleep(2)
 
     # assuming that the data is processed, call the function to generate the batches
     return Response(generate_batches(gaussian_count // 5, gaussian_count), content_type='text/event-stream')
