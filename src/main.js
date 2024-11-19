@@ -67,6 +67,17 @@ const defaultCameraParameters = {
     }
 }
 
+let capture = false;
+// Keypress listener, press c to capture the screenshot
+document.addEventListener('keydown', (event) => {
+    // Check if the 'c' key is pressed
+    if (event.key === 'c' || event.key === 'C') {
+        console.log('C key pressed: Taking screenshot...');
+        // takeScreenshot();
+        capture = true;
+    }
+});
+
 async function main() {
     // Setup webgl context and buffers
     const { glContext, glProgram, buffers } = await setupWebglContext()
@@ -168,10 +179,10 @@ async function loadScene({scene, file}) {
                 console.log("Updated sceneMin:", sceneMin);
                 console.log("Updated sceneMax:", sceneMax);
 
-                console.log("debug position:", allGaussians.gaussians.positions[0]);
-                console.log("debug opacities:", allGaussians.gaussians.opacities[0]);
-                console.log("debug colors:", allGaussians.gaussians.colors[0]);
-                console.log("debug cov3Ds:", allGaussians.gaussians.cov3Ds[0]);
+                // console.log("debug position:", allGaussians.gaussians.positions[0]);
+                // console.log("debug opacities:", allGaussians.gaussians.opacities[0]);
+                // console.log("debug colors:", allGaussians.gaussians.colors[0]);
+                // console.log("debug cov3Ds:", allGaussians.gaussians.cov3Ds[0]);
 
                 // process the received 3DGS data
                 worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
@@ -195,6 +206,11 @@ async function loadScene({scene, file}) {
                 if (responseData.gaussians.total_gs_num<=gaussianCount) {
                     eventSource.close();
                     console.log("EventSource connection closed.");
+                    // capture the screenshot
+                    setTimeout(() => {
+                        console.log('call the function to capture the screenshot');
+                        capture=true;
+                    }, 2000);
                 }
             };
     
@@ -290,6 +306,11 @@ function render(width, height, res) {
 
     // Draw gizmo
     gizmoRenderer.render()
+
+    if (capture) {
+        capture=false;
+        takeScreenshot();
+    }
 
     renderFrameRequest = null
 
