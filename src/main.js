@@ -41,7 +41,13 @@ const settings = {
     // Camera calibration
     calibrateCamera: () => {},
     finishCalibration: () => {},
-    showGizmo: true
+    showGizmo: true,
+
+    // Camera path following
+    startPathFollow: () => cam.startPathFollow(), // Starts camera movement along path
+    stopPathFollow: () => cam.stopPathFollow(),  // Stops camera movement along path
+    pathDuration: 10, // Default duration (in seconds)
+    setPath: () => {} // Placeholder function, updated later
 }
 
 const defaultCameraParameters = {
@@ -272,6 +278,9 @@ function render(width, height, res) {
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.useProgram(program)
 
+
+    // Update camera path-following and position (for path following function)
+    cam.updatePathFollow();
     // Update camera
     cam.update()
 

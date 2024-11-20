@@ -78,6 +78,9 @@ function initGUI() {
     
     // Github panel
     addGithubLink(gui)
+
+    // Path following control
+    addPathControls(gui);
 }
 
 function addCameraCalibrationFolder(gui) {
@@ -170,12 +173,35 @@ function addGithubLink(gui) {
     
     const githubLink = document.createElement('a')
     githubLink.style.color = 'white'
-    githubLink.href = 'https://github.com/kishimisu/Gaussian-Splatting-WebGL'
-    githubLink.textContent = 'github.com/Gaussian-Splatting-WebGL'
+    githubLink.href = 'https://github.com/jimmylizheng/SGD/tree/main'
+    githubLink.textContent = 'github.com/SGD'
     githubLink.target = '_blank'
     githubLink.rel = 'noopener noreferrer'
     githubElm.innerHTML = githubLogo
     githubElm.appendChild(githubLink)
 
     gui.domElement.appendChild(githubElm)
+}
+
+// Path following implementation
+function addPathControls(gui) {
+    // console.log('Adding Start Path control begin');
+    const pathFolder = gui.addFolder('Camera Path').close();
+
+    pathFolder.add(settings, 'startPathFollow').name('Start Path');
+    pathFolder.add(settings, 'stopPathFollow').name('Stop Path');
+    pathFolder.add(settings, 'pathDuration', 1, 60, 1).name('Path Duration (s)');
+
+    // Example path setup with position and target
+    settings.setPath = () => {
+        const path = [
+            { position: [0, 10, 30], target: [0, 0, 0] },
+            { position: [20, 20, 10], target: [10, 0, 0] },
+            { position: [0, 10, -30], target: [0, -10, 0] },
+            { position: [-20, 5, 10], target: [-10, 10, 0] }
+        ];
+        cam.setPath(path, settings.pathDuration);
+    };
+    pathFolder.add(settings, 'setPath').name('Set Example Path');
+    // console.log('Adding Start Path control');
 }
