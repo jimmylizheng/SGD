@@ -79,8 +79,10 @@ function initGUI() {
     // Github panel
     addGithubLink(gui)
 
-    // Path following control
+    // Path following control and path logging
     addPathControls(gui);
+    // gui.add({ startLogging: () => startPathLogging(100) }, 'startLogging').name('Start Logging');
+    // gui.add({ stopLogging: () => stopPathLogging() }, 'stopLogging').name('Stop Logging');
 }
 
 function addCameraCalibrationFolder(gui) {
@@ -184,24 +186,70 @@ function addGithubLink(gui) {
 }
 
 // Path following implementation
+// function addPathControls(gui) {
+//     // console.log('Adding Start Path control begin');
+//     const pathFolder = gui.addFolder('Camera Path').close();
+
+//     pathFolder.add(settings, 'startPathFollow').name('Start Path');
+//     pathFolder.add(settings, 'stopPathFollow').name('Stop Path');
+//     pathFolder.add(settings, 'pathDuration', 1, 60, 1).name('Path Duration (s)');
+
+//     // Example path setup with position and target
+//     settings.setPath = () => {
+//         const path = [
+//             { position: [0, 10, 30], target: [0, 0, 0] },
+//             { position: [20, 20, 10], target: [10, 0, 0] },
+//             { position: [0, 10, -30], target: [0, -10, 0] },
+//             { position: [-20, 5, 10], target: [-10, 10, 0] }
+//         ];
+//         cam.setPath(path, settings.pathDuration);
+//     };
+//     pathFolder.add(settings, 'setPath').name('Set Example Path');
+//     // console.log('Adding Start Path control');
+
+//     // Add "Save Path" button
+//     settings.savePath = () => cam.saveLoggedPath();
+//     pathFolder.add(settings, 'savePath').name('Save Path');
+
+//     // Add "Load Path" file input
+//     const loadPathInput = document.createElement('input');
+//     loadPathInput.type = 'file';
+//     loadPathInput.accept = 'application/json';
+//     loadPathInput.style.display = 'none';
+//     loadPathInput.addEventListener('change', (event) => {
+//         const file = event.target.files[0];
+//         if (file) cam.loadPathFromFile(file);
+//     });
+//     document.body.appendChild(loadPathInput);
+
+//     settings.loadPath = () => loadPathInput.click();
+//     pathFolder.add(settings, 'loadPath').name('Load Path');
+// }
+
 function addPathControls(gui) {
-    // console.log('Adding Start Path control begin');
     const pathFolder = gui.addFolder('Camera Path').close();
 
-    pathFolder.add(settings, 'startPathFollow').name('Start Path');
-    pathFolder.add(settings, 'stopPathFollow').name('Stop Path');
-    pathFolder.add(settings, 'pathDuration', 1, 60, 1).name('Path Duration (s)');
+    // Add Start and Stop Logging controls
+    pathFolder.add(settings, 'startPathLogging').name('Start Logging'); // Button to start logging
+    // pathFolder.add(settings, 'stopPathLogging').name('Stop Logging');   // Button to stop logging
 
-    // Example path setup with position and target
-    settings.setPath = () => {
-        const path = [
-            { position: [0, 10, 30], target: [0, 0, 0] },
-            { position: [20, 20, 10], target: [10, 0, 0] },
-            { position: [0, 10, -30], target: [0, -10, 0] },
-            { position: [-20, 5, 10], target: [-10, 10, 0] }
-        ];
-        cam.setPath(path, settings.pathDuration);
-    };
-    pathFolder.add(settings, 'setPath').name('Set Example Path');
-    // console.log('Adding Start Path control');
+    // Add Save Path button
+    pathFolder.add(settings, 'savePath').name('Save Path');
+
+    // Add Load Path button
+    const loadPathInput = document.createElement('input');
+    loadPathInput.type = 'file';
+    loadPathInput.accept = 'application/json';
+    loadPathInput.style.display = 'none';
+    loadPathInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) cam.loadPathFromFile(file);
+    });
+    document.body.appendChild(loadPathInput);
+
+    settings.loadPath = () => loadPathInput.click();
+    pathFolder.add(settings, 'loadPath').name('Load Path');
+
+    // Add Start Replay button
+    pathFolder.add(settings, 'startReplay').name('Start Replay');
 }

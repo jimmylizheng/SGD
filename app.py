@@ -68,6 +68,9 @@ def load_scene():
     gaussian_count = int(next(line.split()[-1] for line in header.splitlines() if line.startswith('element vertex')))
     num_props = 62  # Total properties per Gaussian
     print(gaussian_count)
+    
+    # for debug purpose, comment the following line when doing real experiment
+    gaussian_count=gaussian_count//50
 
     # positions = []
     # opacities = []
@@ -266,7 +269,7 @@ def load_scene():
             time.sleep(2)
 
     # assuming that the data is processed, call the function to generate the batches
-    batch_num=5
+    batch_num=3
     return Response(generate_batches(gaussian_count // batch_num, gaussian_count), content_type='text/event-stream')
 
 

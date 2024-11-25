@@ -44,10 +44,16 @@ const settings = {
     showGizmo: true,
 
     // Camera path following
-    startPathFollow: () => cam.startPathFollow(), // Starts camera movement along path
-    stopPathFollow: () => cam.stopPathFollow(),  // Stops camera movement along path
-    pathDuration: 10, // Default duration (in seconds)
-    setPath: () => {} // Placeholder function, updated later
+    // startPathFollow: () => cam.startPathFollow(), // Starts camera movement along path
+    // stopPathFollow: () => cam.stopPathFollow(),  // Stops camera movement along path
+    // pathDuration: 10, // Default duration (in seconds)
+    // setPath: () => {} // Placeholder function, updated later
+    startPathLogging: () => cam.startPathLogging(100), // Start logging with an interval of 100ms
+    // stopPathLogging: () => stopPathLogging(),     // Stop logging
+    savePath: () => cam.saveLoggedPath(),         // Save the logged path
+    loadPath: () => {},                           // Placeholder for loading
+    startReplay: () => cam.startPathReplay(),     // Start replaying the path
+    pathDuration: 10                              // Default path duration for replay
 }
 
 const defaultCameraParameters = {
@@ -73,6 +79,7 @@ const defaultCameraParameters = {
     }
 }
 
+// When capture is true, capture a screenshot
 let capture = false;
 // Keypress listener, press c to capture the screenshot
 document.addEventListener('keydown', (event) => {
@@ -83,6 +90,25 @@ document.addEventListener('keydown', (event) => {
         capture = true;
     }
 });
+
+// Variables and functons for path logging function
+// let logInterval = null;
+
+// function startPathLogging(interval = 100) {
+//     console.log("executing startPathLogging")
+//     if (logInterval) return; // Avoid duplicate intervals
+    // logInterval = setInterval(() => {
+    //     cam.logCurrentPosition();
+    // }, interval);
+// }
+
+// function stopPathLogging() {
+//     console.log("executing stopPathLogging")
+//     if (logInterval) {
+//         clearInterval(logInterval);
+//         logInterval = null;
+//     }
+// }
 
 async function main() {
     // Setup webgl context and buffers
@@ -194,7 +220,7 @@ async function loadScene({scene, file}) {
                 worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
                 const cameraParameters = scene ? defaultCameraParameters[scene] : {}
                 if (cam == null) cam = new Camera(cameraParameters)
-                else cam.setParameters(cameraParameters)
+                // else cam.setParameters(cameraParameters)
                 cam.update()
 
                 // Update GUI
@@ -280,7 +306,9 @@ function render(width, height, res) {
 
 
     // Update camera path-following and position (for path following function)
-    cam.updatePathFollow();
+    // cam.updatePathFollow();
+    // logCurrentPosition();
+    cam.updatePathReplay();
     // Update camera
     cam.update()
 

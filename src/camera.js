@@ -127,6 +127,12 @@ class Camera {
 
         // Update camera from mouse and keyboard inputs
         setInterval(this.updateKeys.bind(this), 1000/60)
+
+        // Variables for path logging
+        this.loggedPath = []; // Store the logged path
+        this.pathStartTime = null; // Start time for logging
+        this.pathEndTime = null; // End time for logging
+        this.logInterval = null;
     }
 
     // Reset parameters on new scene load
@@ -279,67 +285,234 @@ class Camera {
     }
 
     // functions for implementing path following function
-    setPath(path, duration) {
-        console.log('execute setPath()');
-        this.path = path; // Array of waypoints with position and target
-        this.pathDuration = duration; // Total time to complete the path
-        this.pathStartTime = null;
-        this.isFollowingPath = false;
-    }
+    // setPath(path, duration) {
+    //     console.log('execute setPath()');
+    //     this.path = path; // Array of waypoints with position and target
+    //     this.pathDuration = duration; // Total time to complete the path
+    //     this.pathStartTime = null;
+    //     this.isFollowingPath = false;
+    // }
 
-    startPathFollow() {
-        console.log('execute startPathFollow()');
-        if (!this.path || this.path.length < 2) {
-            console.error("Path is not defined or too short!");
+    // startPathFollow() {
+    //     console.log('execute startPathFollow()');
+    //     if (!this.path || this.path.length < 2) {
+    //         console.error("Path is not defined or too short!");
+    //         return;
+    //     }
+    //     this.pathStartTime = performance.now();
+    //     this.isFollowingPath = true;
+    // }
+
+    // stopPathFollow() {
+    //     console.log('execute stopPathFollow()');
+    //     this.isFollowingPath = false;
+    // }
+
+    startPathReplay() {
+        if (!this.loggedPath || this.loggedPath.length < 2) {
+            console.error("No valid path to replay!");
             return;
         }
-        this.pathStartTime = performance.now();
-        this.isFollowingPath = true;
+        settings.renderResolution=1;
+        this.pathStartTime = performance.now(); // Start time for replay
+        this.isReplayingPath = true;
+        const replay = () => {
+            if (!this.isReplayingPath) return; // Stop if replay is interrupted
+    
+            // Call the existing updatePathReplay function
+            // this.updatePathReplay();
+    
+            // Trigger rendering
+            requestRender();
+    
+            // Schedule the next frame
+            requestAnimationFrame(replay);
+        };
+        // Start the replay loop
+        requestAnimationFrame(replay);
     }
 
-    stopPathFollow() {
-        console.log('execute stopPathFollow()');
-        this.isFollowingPath = false;
-    }
-
-    updatePathFollow() {
-        console.log('execute updatePathFollow()');
-        if (!this.isFollowingPath) return;
+    updatePathReplay() {
+        if (!this.isReplayingPath) return;
 
         const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
-        const t = elapsed / this.pathDuration; // Normalized time [0, 1]
+        const path = this.loggedPath;
 
-        if (t >= 1) {
-            this.isFollowingPath = false; // Stop when the path is complete
+        // Find the segment based on time
+        let segmentIndex = path.findIndex((p) => p.time > elapsed);
+        if (segmentIndex === -1) {
+            this.isReplayingPath = false; // Replay finished
             return;
         }
 
-        // Determine which segment of the path we're in
-        const segmentCount = this.path.length - 1;
-        const segmentIndex = Math.min(Math.floor(t * segmentCount), segmentCount - 1);
-        const segmentT = (t * segmentCount) - segmentIndex;
+        if (segmentIndex === 0) segmentIndex = 1; // Ensure we don't use the first point
 
-        const start = this.path[segmentIndex];
-        const end = this.path[segmentIndex + 1];
+        const prev = path[segmentIndex - 1];
+        const next = path[segmentIndex];
 
-        // Interpolate position
+        // Interpolate between the two points
+        const segmentT = (elapsed - prev.time) / (next.time - prev.time);
+
         const currentPosition = [
-            start.position[0] + (end.position[0] - start.position[0]) * segmentT,
-            start.position[1] + (end.position[1] - start.position[1]) * segmentT,
-            start.position[2] + (end.position[2] - start.position[2]) * segmentT,
+            prev.position[0] + (next.position[0] - prev.position[0]) * segmentT,
+            prev.position[1] + (next.position[1] - prev.position[1]) * segmentT,
+            prev.position[2] + (next.position[2] - prev.position[2]) * segmentT,
         ];
 
-        // Interpolate target
         const currentTarget = [
-            start.target[0] + (end.target[0] - start.target[0]) * segmentT,
-            start.target[1] + (end.target[1] - start.target[1]) * segmentT,
-            start.target[2] + (end.target[2] - start.target[2]) * segmentT,
+            prev.target[0] + (next.target[0] - prev.target[0]) * segmentT,
+            prev.target[1] + (next.target[1] - prev.target[1]) * segmentT,
+            prev.target[2] + (next.target[2] - prev.target[2]) * segmentT,
         ];
+
+        // Interpolate spherical coordinates
+        const currentTheta = prev.theta + (next.theta - prev.theta) * segmentT;
+        const currentPhi = prev.phi + (next.phi - prev.phi) * segmentT;
+        const currentRadius = prev.radius + (next.radius - prev.radius) * segmentT;
 
         // Update camera parameters
+        this.theta = currentTheta;
+        this.phi = currentPhi;
+        this.radius = currentRadius;
         this.target = currentTarget;
-        vec3.copy(this.pos, currentPosition); // Camera position
+        vec3.copy(this.pos, currentPosition);
         this.update();
+    }
+
+    // updatePathFollow() {
+    //     // console.log('execute updatePathFollow()');
+    //     if (!this.isFollowingPath) return;
+
+    //     // performance.now(): Unit: Milliseconds (ms)
+    //     const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
+    //     const t = elapsed / this.pathDuration; // Normalized time [0, 1]
+
+    //     if (t >= 1) {
+    //         this.isFollowingPath = false; // Stop when the path is complete
+    //         return;
+    //     }
+
+    //     // Determine which segment of the path we're in
+    //     const segmentCount = this.path.length - 1;
+    //     const segmentIndex = Math.min(Math.floor(t * segmentCount), segmentCount - 1);
+    //     const segmentT = (t * segmentCount) - segmentIndex;
+
+    //     const start = this.path[segmentIndex];
+    //     const end = this.path[segmentIndex + 1];
+
+    //     // Interpolate position
+    //     const currentPosition = [
+    //         start.position[0] + (end.position[0] - start.position[0]) * segmentT,
+    //         start.position[1] + (end.position[1] - start.position[1]) * segmentT,
+    //         start.position[2] + (end.position[2] - start.position[2]) * segmentT,
+    //     ];
+
+    //     // Interpolate target
+    //     const currentTarget = [
+    //         start.target[0] + (end.target[0] - start.target[0]) * segmentT,
+    //         start.target[1] + (end.target[1] - start.target[1]) * segmentT,
+    //         start.target[2] + (end.target[2] - start.target[2]) * segmentT,
+    //     ];
+
+    //     // Update camera parameters
+    //     this.target = currentTarget;
+    //     vec3.copy(this.pos, currentPosition); // Camera position
+    //     this.update();
+    // }
+
+    // Functions for implementing path logging function
+
+    // startPathLogging(interval = 100) {
+    //     console.log("executing startPathLogging")
+    //     this.loggedPath = [];
+    //     this.pathStartTime = performance.now(); // Record the start time
+    //     this.pathEndTime = null;
+    //     if (logInterval) return; // Avoid duplicate intervals
+    //     logInterval = setInterval(() => {
+    //         cam.logCurrentPosition();
+    //     }, interval);
+    // }
+
+    startPathLogging(interval = 100) {
+        console.log("executing startPathLogging");
+        this.loggedPath = [];
+        this.pathStartTime = performance.now(); // Record the start time
+        if (this.logInterval) return; // Avoid duplicate intervals
+        this.logInterval = setInterval(() => {
+            cam.logCurrentPosition();
+        }, interval);
+    }
+
+    // stopPathLogging() {
+    //     console.log("executing stopPathLogging")
+    //     this.pathEndTime = performance.now(); // Record the end time
+    //     if (logInterval) {
+    //         clearInterval(logInterval);
+    //         logInterval = null;
+    //     }
+    // }
+
+    logCurrentPosition() {
+        // const currentPosition = this.getPos();
+        // const currentTarget = [...this.target];
+        // this.loggedPath.push({ position: currentPosition, target: currentTarget });
+
+        if (!this.pathStartTime) {
+            console.error("Path logging has not started!");
+            return;
+        }
+
+        const currentPosition = this.getPos();
+        const currentTarget = [...this.target];
+        const elapsedTime = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
+
+        this.loggedPath.push({
+            position: currentPosition,
+            target: currentTarget,
+            theta: this.theta, // Horizontal rotation angle
+            phi: this.phi, // Vertical rotation angle
+            radius: this.radius, // Distance to target
+            time: elapsedTime // Log the elapsed time
+        });
+    }
+
+    saveLoggedPath(filename = 'logged_path.json') {
+        console.log("executing saveLoggedPath");
+        if (this.logInterval) {
+            clearInterval(this.logInterval);
+            this.logInterval = null;
+        }
+        if (this.loggedPath.length === 0) {
+            console.warn("No path to save.");
+            return;
+        }
+        const data = JSON.stringify(this.loggedPath, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log("Path saved to file:", filename);
+    }
+
+    async loadPathFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const path = JSON.parse(event.target.result);
+                if (!Array.isArray(path) || path.length === 0) {
+                    throw new Error("Invalid path format");
+                }
+                // this.setPath(path, settings.pathDuration);
+                this.loggedPath = path;
+                console.log("Path loaded:", path);
+            } catch (error) {
+                console.error("Failed to load path:", error);
+            }
+        };
+        reader.readAsText(file);
     }
 }
 
