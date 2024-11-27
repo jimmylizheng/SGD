@@ -40,6 +40,130 @@ def compute_cov3d(scale, mod, rot):
     cov3d = [Sigma[0, 0], Sigma[0, 1], Sigma[0, 2], Sigma[1, 1], Sigma[1, 2], Sigma[2, 2]]
     return cov3d
 
+def sort_by_opacity_and_size(opacities, colors, positions, cov3ds, scales):
+    """
+    根据透明度和大小的组合效用值降序排序，并同步调整其他数据。
+    
+    参数:
+        opacities (np.ndarray): 不透明度数组，长度为 n。
+        colors (np.ndarray): 颜色数组，长度为 3 * n。
+        positions (np.ndarray): 位置数组，长度为 3 * n。
+        cov3ds (list): 协方差数组，长度为 6 * n。
+        scales (np.ndarray): 尺度数组，长度为 3 * n。
+        
+    返回:
+        tuple: 排序后的 (opacities, colors, positions, cov3ds, scales)。
+    """
+    # 计算每个 splat 的大小：x * y * z
+    scales_reshaped = scales.reshape(-1, 3)  # 将 scales 变为 [n, 3] 的形状
+    size = np.prod(scales_reshaped, axis=1)  # 计算每个 splat 的大小
+    
+    # 计算效用值 U = opacity * size
+    utility_values = opacities * size
+    
+    # 获取按效用值降序的索引
+    sorted_indices = np.argsort(utility_values)[::-1]
+    
+    # 按索引重排数据
+    sorted_opacities = opacities[sorted_indices]
+    sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_cov3ds = np.array(cov3ds).reshape(-1, 6)[sorted_indices].flatten().tolist()
+    sorted_scales = scales_reshaped[sorted_indices].flatten()
+    
+    return sorted_opacities, sorted_colors, sorted_positions, sorted_cov3ds, sorted_scales
+
+
+def sort_by_brightness(opacities, colors, positions, cov3ds):
+    """
+    根据 splat 的亮度值降序排序，并同步调整其他数据。
+    
+    参数:
+        opacities (np.ndarray): 不透明度数组，长度为 n。
+        colors (np.ndarray): 颜色数组，长度为 3 * n。
+        positions (np.ndarray): 位置数组，长度为 3 * n。
+        cov3ds (list): 协方差数组，长度为 6 * n。
+        
+    返回:
+        tuple: 排序后的 (opacities, colors, positions, cov3ds)。
+    """
+    # 提取 RGB 值
+    colors_reshaped = colors.reshape(-1, 3)  # 将 colors 变为 [n, 3] 的形状
+    
+    # 根据公式计算亮度值
+    brightness = (
+        0.299 * colors_reshaped[:, 0] +  # R 分量
+        0.587 * colors_reshaped[:, 1] +  # G 分量
+        0.114 * colors_reshaped[:, 2]    # B 分量
+    )
+    
+    # 获取按亮度值降序的索引
+    sorted_indices = np.argsort(brightness)[::-1]
+    
+    # 按索引重排数据
+    sorted_opacities = opacities[sorted_indices]
+    sorted_colors = colors_reshaped[sorted_indices].flatten()
+    sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_cov3ds = np.array(cov3ds).reshape(-1, 6)[sorted_indices].flatten().tolist()
+    
+    return sorted_opacities, sorted_colors, sorted_positions, sorted_cov3ds
+
+
+def sort_by_scale(opacities, colors, positions, cov3ds, scales):
+    """
+    根据 splat 的大小 (scale 的乘积) 降序排序，并同步调整其他数据。
+    
+    参数:
+        opacities (np.ndarray): 不透明度数组，长度为 n。
+        colors (np.ndarray): 颜色数组，长度为 3 * n。
+        positions (np.ndarray): 位置数组，长度为 3 * n。
+        cov3ds (list): 协方差数组，长度为 6 * n。
+        scales (np.ndarray): 尺度数组，长度为 3 * n (每 3 个值为一个 splat 的 [x, y, z])。
+        
+    返回:
+        tuple: 排序后的 (opacities, colors, positions, cov3ds, scales)。
+    """
+    # 计算每个 splat 的效用值 U = x * y * z
+    scales_reshaped = scales.reshape(-1, 3)  # 将 scales 变为 [n, 3] 的形状
+    utility_values = np.prod(scales_reshaped, axis=1)  # 计算每个 splat 的大小
+    
+    # 获取按效用值降序的索引
+    sorted_indices = np.argsort(utility_values)[::-1]
+    
+    # 按索引重排数据
+    sorted_opacities = opacities[sorted_indices]
+    sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_cov3ds = np.array(cov3ds).reshape(-1, 6)[sorted_indices].flatten().tolist()
+    sorted_scales = scales_reshaped[sorted_indices].flatten()
+    
+    return sorted_opacities, sorted_colors, sorted_positions, sorted_cov3ds, sorted_scales
+
+
+def sort_data(opacities, colors, positions, cov3ds):
+    """
+    根据 opacities 降序对数据进行排序，并同步调整 colors、positions 和 cov3ds。
+    
+    参数:
+        opacities (np.ndarray): 不透明度数组，长度为 n。
+        colors (np.ndarray): 颜色数组，长度为 3 * n。
+        positions (np.ndarray): 位置数组，长度为 3 * n。
+        cov3ds (list): 协方差数组，长度为 6 * n。
+        
+    返回:
+        tuple: 排序后的 (opacities, colors, positions, cov3ds)。
+    """
+    # 获取降序排序索引
+    sorted_indices = np.argsort(opacities)[::-1]
+    
+    # 根据排序索引重排数据
+    sorted_opacities = opacities[sorted_indices]
+    sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
+    sorted_cov3ds = np.array(cov3ds).reshape(-1, 6)[sorted_indices].flatten().tolist()
+    return sorted_opacities, sorted_colors, sorted_positions, sorted_cov3ds
+
+
 @app.route('/api/load_scene', methods=['GET'])
 def load_scene():
     
@@ -72,38 +196,6 @@ def load_scene():
     # for debug purpose, comment the following line when doing real experiment
     gaussian_count=gaussian_count//50
 
-    # positions = []
-    # opacities = []
-    # colors = []
-    # cov3ds = []
-
-    # Data parsing
-    # for i in range(gaussian_count):
-    #     offset = header_end + i * num_props * 4
-    #     position = struct.unpack_from('<fff', content, offset)
-    #     harmonic = struct.unpack_from('<fff', content, offset + 6 * 4)
-    #     opacity_raw = struct.unpack_from('<f', content, offset + (6 + 48) * 4)[0]
-    #     scale = struct.unpack_from('<fff', content, offset + (6 + 49) * 4)
-    #     rotation = struct.unpack_from('<ffff', content, offset + (6 + 52) * 4)
-
-    #     # Normalize quaternion
-    #     rotation = np.array(rotation) / np.linalg.norm(rotation)
-
-    #     # Convert scale and rotation to covariance
-    #     cov3d = compute_cov3d(scale, 1, rotation)
-
-    #     # Activate opacity
-    #     opacity = sigmoid(opacity_raw)
-        
-
-    #     # Color based on harmonic
-    #     sh_c0 = 0.28209479177387814
-    #     color = [0.5 + sh_c0 * harmonic[0], 0.5 + sh_c0 * harmonic[1], 0.5 + sh_c0 * harmonic[2]]
-    #     opacities = np.append(opacities, opacity)
-    #     colors = np.append(colors, color)
-    #     cov3ds = np.append(cov3ds, cov3d)
-    #     positions = np.append(positions, position)
-    # pre allocate array
     opacities = np.zeros(gaussian_count)
     colors = np.zeros(3 * gaussian_count)  # 3*length
     cov3ds = []  # 6*length
@@ -132,69 +224,6 @@ def load_scene():
         length = np.sqrt(length2).astype(np.float32)  # ensure that the length is float32
         rotation = rotation / length
         scale = np.exp(scale).astype(np.float32)
-
-
-        # if i == 0:
-        #     # print("First iteration - rotation:", rotation)
-        #     # print("First iteration - scale (before exp):", scale)   
-        #     print("First iteration - rotation: ", [f"{r:.20f}" for r in rotation])
-        #     print("First iteration - scale (after exp): ",[f"{r:.20f}" for r in scale])
-        #     # Compute scaling matrix
-        #     S = np.diag([1 * scale[0], 1 * scale[1], 1 * scale[2]])
-        #     print(f"First iteration - S0: {S[0, 0]:.20f}")
-        #     print(f"First iteration - S1: {S[0, 1]:.20f}")
-        #     print(f"First iteration - S2: {S[0, 2]:.20f}")
-        #     print(f"First iteration - S3: {S[1, 0]:.20f}")
-        #     print(f"First iteration - S4: {S[1, 1]:.20f}")
-        #     print(f"First iteration - S5: {S[1, 2]:.20f}")
-        #     print(f"First iteration - S6: {S[2, 0]:.20f}")
-        #     print(f"First iteration - S7: {S[2, 1]:.20f}")
-        #     print(f"First iteration - S8: {S[2, 2]:.20f}")
-
-        #     # Quaternion to rotation matrix
-        #     r, x, y, z = rotation
-        #     print(f"First iteration - r: {r:.20f}")
-        #     print(f"First iteration - x: {x:.20f}")
-        #     print(f"First iteration - y: {y:.20f}")
-        #     print(f"First iteration - z: {z:.20f}")
-        #     R = np.array([
-        #         [1 - 2 * (y * y + z * z), 2 * (x * y - r * z), 2 * (x * z + r * y)],
-        #         [2 * (x * y + r * z), 1 - 2 * (x * x + z * z), 2 * (y * z - r * x)],
-        #         [2 * (x * z - r * y), 2 * (y * z + r * x), 1 - 2 * (x * x + y * y)]
-        #     ])
-        #     print(f"First iteration - R0: {R[0, 0]:.20f}")
-        #     print(f"First iteration - R1: {R[0, 1]:.20f}")
-        #     print(f"First iteration - R2: {R[0, 2]:.20f}")
-        #     print(f"First iteration - R3: {R[1, 0]:.20f}")
-        #     print(f"First iteration - R4: {R[1, 1]:.20f}")
-        #     print(f"First iteration - R5: {R[1, 2]:.20f}")
-        #     print(f"First iteration - R6: {R[2, 0]:.20f}")
-        #     print(f"First iteration - R7: {R[2, 1]:.20f}")
-        #     print(f"First iteration - R8: {R[2, 2]:.20f}")
-
-        #     # Compute 3D world covariance matrix Sigma
-        #     # M = S @ R
-        #     M = R @ S
-        #     print(f"First iteration - M0: {M[0, 0]:.20f}")
-        #     print(f"First iteration - M1: {M[0, 1]:.20f}")
-        #     print(f"First iteration - M2: {M[0, 2]:.20f}")
-        #     print(f"First iteration - M3: {M[1, 0]:.20f}")
-        #     print(f"First iteration - M4: {M[1, 1]:.20f}")
-        #     print(f"First iteration - M5: {M[1, 2]:.20f}")
-        #     print(f"First iteration - M6: {M[2, 0]:.20f}")
-        #     print(f"First iteration - M7: {M[2, 1]:.20f}")
-        #     print(f"First iteration - M8: {M[2, 2]:.20f}")
-        #     # Sigma = M.T @ M
-        #     Sigma = M @ M.T
-        #     print(f"First iteration - Sigma0: {Sigma[0, 0]:.20f}")
-        #     print(f"First iteration - Sigma1: {Sigma[0, 1]:.20f}")
-        #     print(f"First iteration - Sigma2: {Sigma[0, 2]:.20f}")
-        #     print(f"First iteration - Sigma3: {Sigma[1, 0]:.20f}")
-        #     print(f"First iteration - Sigma4: {Sigma[1, 1]:.20f}")
-        #     print(f"First iteration - Sigma5: {Sigma[1, 2]:.20f}")
-        #     print(f"First iteration - Sigma6: {Sigma[2, 0]:.20f}")
-        #     print(f"First iteration - Sigma7: {Sigma[2, 1]:.20f}")
-        #     print(f"First iteration - Sigma8: {Sigma[2, 2]:.20f}")
         cov3d = compute_cov3d(scale, 1, rotation)
 
         # Activate opacity
@@ -268,6 +297,7 @@ def load_scene():
             # control the time interval of sending each request
             time.sleep(2)
 
+    opacities, colors, positions, cov3ds = sort_data(opacities, colors, positions, cov3ds)
     # assuming that the data is processed, call the function to generate the batches
     batch_num=3
     return Response(generate_batches(gaussian_count // batch_num, gaussian_count), content_type='text/event-stream')
