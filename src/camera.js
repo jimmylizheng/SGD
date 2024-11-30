@@ -57,14 +57,21 @@ class Camera {
         this.vpm = mat4.create()
 
         // Rotate camera around target (mouse)
+        let renderRequested = false;
         gl.canvas.addEventListener('mousemove', e => {
             if (!e.buttons || this.disableMovement) return
 
-            this.theta -= e.movementX * 0.01 * .5
-            this.phi = Math.max(1e-6, Math.min(Math.PI - 1e-6, this.phi + e.movementY * 0.01 * .5))
+            this.theta -= e.movementX * 0.005
+            this.phi = Math.max(1e-6, Math.min(Math.PI - 1e-6, this.phi + e.movementY * 0.005))
             this.isDragging = true
 
-            requestRender()
+            if (!renderRequested) {
+                renderRequested = true
+                requestAnimationFrame(() => {
+                    requestRender()
+                    renderRequested = false
+                })
+            }
         })
 
         // Rotate camera around target (touch)
@@ -93,11 +100,13 @@ class Camera {
         })
 
         // Zoom in and out
+        let lastWheelEvent = 0;
         gl.canvas.addEventListener('wheel', e => {
-            if (this.freeFly || this.disableMovement) return
+            const now = performance.now()
+            if (this.freeFly || this.disableMovement || now - lastWheelEvent < 50) return
+            lastWheelEvent = now
 
             this.radius = Math.max(1, this.radius + e.deltaY * 0.01)
-
             requestRender()
         })
 
@@ -207,7 +216,7 @@ class Camera {
         const dot = this.lastViewProjMatrix[2]  * this.vpm[2] 
                   + this.lastViewProjMatrix[6]  * this.vpm[6]
                   + this.lastViewProjMatrix[10] * this.vpm[10]
-        if (Math.abs(dot - 1) > 0.01) {
+        if (Math.abs(dot - 1) > 0.5) {//improve the limit
             this.needsWorkerUpdate = true
             mat4.copy(this.lastViewProjMatrix, this.vpm)
         }
@@ -279,12 +288,22 @@ class Camera {
     }
 
     // functions for implementing path following function
-    setPath(path, duration) {
+    /*setPath(path, duration) {
         console.log('execute setPath()');
         this.path = path; // Array of waypoints with position and target
         this.pathDuration = duration; // Total time to complete the path
         this.pathStartTime = null;
         this.isFollowingPath = false;
+    }*/
+    setPath(path, duration) {
+        this.path = path.map((point, index) => {
+            const nextPoint = path[index + 1] || point; 
+            return {
+                start: point,
+                end: nextPoint,
+                duration: duration / path.length,
+            };
+        });
     }
 
     startPathFollow() {

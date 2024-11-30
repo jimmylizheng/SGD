@@ -67,6 +67,7 @@ def load_scene():
     # Extract gaussian count
     gaussian_count = int(next(line.split()[-1] for line in header.splitlines() if line.startswith('element vertex')))
     num_props = 62  # Total properties per Gaussian
+    gaussian_count = gaussian_count // 50
     print(gaussian_count)
 
     # positions = []

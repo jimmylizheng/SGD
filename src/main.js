@@ -194,7 +194,7 @@ async function loadScene({scene, file}) {
                 worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
                 const cameraParameters = scene ? defaultCameraParameters[scene] : {}
                 if (cam == null) cam = new Camera(cameraParameters)
-                else cam.setParameters(cameraParameters)
+                // else cam.setParameters(cameraParameters)
                 cam.update()
 
                 // Update GUI
@@ -280,7 +280,9 @@ function render(width, height, res) {
 
 
     // Update camera path-following and position (for path following function)
-    cam.updatePathFollow();
+    // cam.updatePathFollow();
+    // logCurrentPosition();
+    cam.updatePathReplay()
     // Update camera
     cam.update()
 
