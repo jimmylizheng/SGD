@@ -11,17 +11,18 @@ async function loadPly(content) {
     const regex = /element vertex (\d+)/
     const match = header.match(regex)
     gaussianCount = parseInt(match[1])
+    const SH_C0 = 0.28209479177387814
 
     document.querySelector('#loading-text').textContent = `Success. Initializing ${gaussianCount} gaussians...`
 
     // Create arrays for gaussian properties
-    const positions = []
-    const opacities = []
+    const positions = new Float32Array(gaussianCount * 3)
+    const opacities = new Float32Array(gaussianCount)
     const rotations = []
     const scales = []
     const harmonics = []
-    const colors = []
-    const cov3Ds = []
+    const colors = new Float32Array(gaussianCount * 3)
+    const cov3Ds = new Float32Array(gaussianCount * 6)
 
     // Scene bouding box
     sceneMin = new Array(3).fill(Infinity)
@@ -92,7 +93,6 @@ async function loadPly(content) {
         // Degree 1: 4 harmonics needed (12 floats) per gaussian
         // Degree 2: 9 harmonics needed (27 floats) per gaussian
         // Degree 3: 16 harmonics needed (48 floats) per gaussian
-        const SH_C0 = 0.28209479177387814
         const color = [
             0.5 + SH_C0 * harmonic[0],
             0.5 + SH_C0 * harmonic[1],
