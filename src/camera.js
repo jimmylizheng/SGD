@@ -136,6 +136,10 @@ class Camera {
 
         // Variables for replaying and reloading
         this.LoadEnd=false; // true when the load finishes
+
+        // Variables to do the screenshot outputs
+        this.pic_list=[]; // list consists of timestamps that have been captured
+        this.capture=false;
     }
 
     // Reset parameters on new scene load
@@ -312,6 +316,7 @@ class Camera {
     // }
 
     async startPathReplay_helper() {
+        this.pic_list=[]; 
         if (!this.loggedPath || this.loggedPath.length < 2) {
             console.error("No valid path to replay!");
             return;
@@ -348,6 +353,14 @@ class Camera {
         console.log("update replay");
         const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
         const path = this.loggedPath;
+
+        // check whether or not to take a screenshot
+        console.log("checking elapsed")
+        if (!this.pic_list.includes(Math.floor(elapsed))){
+            console.log("log capture")
+            this.pic_list.push(Math.floor(elapsed));
+            this.capture=true;
+        }
 
         // Find the segment based on time
         let segmentIndex = path.findIndex((p) => p.time > elapsed);

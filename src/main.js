@@ -412,9 +412,17 @@ function render(width, height, res) {
     // Draw gizmo
     gizmoRenderer.render()
 
+    if(cam.capture){
+        capture=true;
+        cam.capture=false;
+        console.log("cam capture is true")
+    }
     if (capture) {
         capture=false;
-        takeScreenshot();
+        if(cam.pic_list.length){
+            takeScreenshot(cam.pic_list[cam.pic_list.length - 1]);
+        }
+        else{takeScreenshot();}
     }
 
     renderFrameRequest = null

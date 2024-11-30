@@ -128,7 +128,7 @@ function saveBlob(blob, filename) {
 }
 
 // function that can capture screenshot when called
-function takeScreenshot() {
+function takeScreenshot(num=0) {
     // const width = gl.canvas.width;
     // const height = gl.canvas.height;
     // const pixels = new Uint8Array(width * height * 4);
@@ -168,7 +168,7 @@ function takeScreenshot() {
         return;
     }
 
-    const num = Date.now(); // Unique number for the filename
+    // const num = Date.now(); // Unique number for the filename
 
     // Convert the canvas content to a Blob and save it
     canvas.toBlob((blob) => {
