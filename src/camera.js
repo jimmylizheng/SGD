@@ -133,6 +133,9 @@ class Camera {
         this.pathStartTime = null; // Start time for logging
         this.pathEndTime = null; // End time for logging
         this.logInterval = null;
+
+        // Variables for replaying and reloading
+        this.LoadEnd=false; // true when the load finishes
     }
 
     // Reset parameters on new scene load
@@ -308,7 +311,7 @@ class Camera {
     //     this.isFollowingPath = false;
     // }
 
-    startPathReplay() {
+    async startPathReplay_helper() {
         if (!this.loggedPath || this.loggedPath.length < 2) {
             console.error("No valid path to replay!");
             return;
@@ -332,9 +335,17 @@ class Camera {
         requestAnimationFrame(replay);
     }
 
+    async startPathReplay() {
+        // startPathReplay_helper();
+
+        // Run both functions concurrently and wait for both to complete
+        await Promise.all([loadScene({ scene: settings.scene }), this.startPathReplay_helper()]);
+        // await Promise.all([loadScene({ scene: settings.scene })]);
+    }
+
     updatePathReplay() {
         if (!this.isReplayingPath) return;
-
+        console.log("update replay");
         const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
         const path = this.loggedPath;
 

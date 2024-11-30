@@ -127,6 +127,10 @@ async function main() {
     // Event that receives sorted gaussian data from the worker
     worker.onmessage = e => {
         const { data, sortTime } = e.data
+        console.log("worker rcvd msg");
+        if (sortTime==0){
+            cam.disableMovement = false
+        }
 
         if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
             document.querySelector('#loading-container').style.opacity = 0
@@ -161,9 +165,42 @@ async function main() {
     // Setup gizmo renderer
     await gizmoRenderer.init()
 
-    // Load the default scene
+    // Load the default scene (for real application)
     await loadScene({ scene: settings.scene })
+
+    // Load the default scene and do the path replay at the same time (for measurement)
+    // const loadScenePromise = loadScene({ scene: settings.scene });
+    // const LoadandReplayPromise = loadandReplayPath();
+    // await Promise.all([loadScenePromise, LoadandReplayPromise]);
+
+    console.log("main ends");
 }
+
+// load and replay the path
+// async function loadandReplayPath() {
+//     try {
+//         const fileInput = document.getElementById("fileInput");
+//         cam.loadPathFromFile(filePath);
+
+//         // const response = await fetch(filePath);
+//         // console.log("get response successfully");
+//         // // const response = await fetch("./pathfile.json");
+
+//         // if (!response.ok) throw new Error(`Failed to load path file: ${response.statusText}`);
+
+//         // const path = await response.json();
+//         // if (!Array.isArray(path) || path.length === 0) throw new Error("Invalid path format");
+
+//         // cam.loggedPath = path;
+//         console.log("Path loaded successfully");
+//         cam.startPathReplay();
+//     } catch (error) {
+//         console.error("Error loading path on page load:", error);
+//         // Optionally load a default path or show a message
+//         // cam.loggedPath = getDefaultPath(); // Example: Provide a fallback path
+//         // cam.startPathReplay();
+//     }
+// }
 
 // Load a .ply scene specified as a name (URL fetch) or local file
 async function loadScene({scene, file}) {
@@ -182,12 +219,34 @@ async function loadScene({scene, file}) {
         scene = scene.split('(')[0].trim();
         console.log(scene);
         const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // specify the port
-        
         try {
-            console.log("Reach here");
+            if (cam && cam.LoadEnd) {
+                // clear the previous data
+                cam.LoadEnd=false;
+                // gaussians: {
+                //     colors: [],
+                //     cov3Ds: [],
+                //     opacities: [],
+                //     positions: [],
+                //     count: 0,
+                // }
+                allGaussians.gaussians.count = 0;
+                allGaussians.gaussians.colors = [];
+                allGaussians.gaussians.cov3Ds = [];
+                allGaussians.gaussians.opacities = [];
+                allGaussians.gaussians.positions = [];
+                console.log("clear the previous data and reload the scene");
+            }
+            console.log("start to process SSE stream");
+
+            const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+            if (cam == null) cam = new Camera(cameraParameters)
     
             // use EventSource to process SSE stream
             const eventSource = new EventSource(url);
+
+            // start replaying when the client is receiving the data
+            // cam.startPathReplay();
             
             // TODO: [Violation] 'message' handler took <N>ms
             eventSource.onmessage = function(event) {
@@ -215,11 +274,18 @@ async function loadScene({scene, file}) {
                 // console.log("debug opacities:", allGaussians.gaussians.opacities[0]);
                 // console.log("debug colors:", allGaussians.gaussians.colors[0]);
                 // console.log("debug cov3Ds:", allGaussians.gaussians.cov3Ds[0]);
+                
+                // hide the loading icon when starting receving information
+                if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
+                    document.querySelector('#loading-container').style.opacity = 0
+                    cam.disableMovement = false
+                }
 
                 // process the received 3DGS data
                 worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
-                const cameraParameters = scene ? defaultCameraParameters[scene] : {}
-                if (cam == null) cam = new Camera(cameraParameters)
+                // const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+                // if (cam == null) cam = new Camera(cameraParameters)
+
                 // else cam.setParameters(cameraParameters)
                 cam.update()
 
@@ -236,8 +302,10 @@ async function loadScene({scene, file}) {
 
                 // close the event souorce
                 if (responseData.gaussians.total_gs_num<=gaussianCount) {
+                    cam.LoadEnd=true;
                     eventSource.close();
                     console.log("EventSource connection closed.");
+                    console.log("cam.disableMovement: ",cam.disableMovement);
                     // capture the screenshot
                     setTimeout(() => {
                         console.log('call the function to capture the screenshot');

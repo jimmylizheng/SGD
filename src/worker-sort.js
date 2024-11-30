@@ -20,6 +20,11 @@ onmessage = function(event) {
         data.cov3Da = new Float32Array(gaussians.count * 3)
         data.cov3Db = new Float32Array(gaussians.count * 3)
         data.colors = new Float32Array(gaussians.count * 3)
+        const sortTime = 0
+        // possible bugs
+        // postMessage({
+        //     data, sortTime,
+        // })
     }
     // Sort gaussians event
     else if (event.data.viewMatrix) {
