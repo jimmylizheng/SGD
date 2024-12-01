@@ -253,6 +253,12 @@ async function loadScene({scene, file}) {
                 // parse the received data for each batch
                 const responseData = JSON.parse(event.data);
                 console.log(responseData); // log the returned data
+
+                if (responseData.isFirst && !this.hasStartedReplay) {
+                    console.log("First data received, starting path replay...");
+                    this.hasStartedReplay = true; // 防止重复触发
+                    cam.startPathReplay(); // 调用异步方法
+                }
     
                 // append new data to current data
                 allGaussians.gaussians.count += responseData.gaussians.count;

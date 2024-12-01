@@ -344,7 +344,7 @@ class Camera {
         // startPathReplay_helper();
 
         // Run both functions concurrently and wait for both to complete
-        await Promise.all([loadScene({ scene: settings.scene }), this.startPathReplay_helper()]);
+        await Promise.all([ this.startPathReplay_helper()]);
         // await Promise.all([loadScene({ scene: settings.scene })]);
     }
 

@@ -251,7 +251,10 @@ def load_scene():
         num_batches = (gaussian_count + batch_size - 1) // batch_size  # number of batches, round up
         print(f"Total batches: {num_batches}")
 
+        firstTime = True
         for batch_index in range(num_batches):  # loop to generate batches
+            if batch_index != 0:
+                firstTime = False
             start_index = batch_index * batch_size
             # ensure that the ending index will not exceed the total number of Gaussians
             end_index = min(start_index + batch_size, gaussian_count)
@@ -280,6 +283,7 @@ def load_scene():
 
             # construct data and send the data to the client through SSE
             data = {
+                'isFirst' : firstTime,
                 'gaussians': {
                     'colors': colors_batch,
                     'cov3Ds': cov3ds_batch,
