@@ -25,6 +25,11 @@ onmessage = function(event) {
         // postMessage({
         //     data, sortTime,
         // })
+        if (gaussians.totalCount==0){
+            postMessage({
+                data, sortTime,
+            })
+        }
     }
     // Sort gaussians event
     else if (event.data.viewMatrix) {

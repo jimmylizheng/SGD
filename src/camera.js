@@ -140,6 +140,9 @@ class Camera {
         // Variables to do the screenshot outputs
         this.pic_list=[]; // list consists of timestamps that have been captured
         this.capture=false;
+
+        // Variables for replaying
+        this.is_first_load=true;
     }
 
     // Reset parameters on new scene load
@@ -340,22 +343,46 @@ class Camera {
         requestAnimationFrame(replay);
     }
 
+
+
     async startPathReplay() {
         // startPathReplay_helper();
-
+        // this.isReplayingPath=true;
+        // clear the gl buffer
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        console.log("start replay");
+        allGaussians.gaussians.count = 0;
+        allGaussians.gaussians.colors = [];
+        allGaussians.gaussians.cov3Ds = [];
+        allGaussians.gaussians.opacities = [];
+        allGaussians.gaussians.positions = [];
+        const clear_buf = () => {
+            // clear the gl buffer
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+    
+            // Trigger rendering
+            requestRender();
+        };
+        // Start the replay loop
+        // requestAnimationFrame(clear_buf);
+        requestRender()
+        console.log("clear the previous data and reload the scene");
         // Run both functions concurrently and wait for both to complete
+        await sleep(2000); // Sleep for 2 seconds
         await Promise.all([loadScene({ scene: settings.scene }), this.startPathReplay_helper()]);
         // await Promise.all([loadScene({ scene: settings.scene })]);
     }
 
     updatePathReplay() {
         if (!this.isReplayingPath) return;
-        console.log("update replay");
+        // console.log("update replay");
         const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
         const path = this.loggedPath;
 
         // check whether or not to take a screenshot
-        console.log("checking elapsed")
+        // console.log("checking elapsed")
         if (!this.pic_list.includes(Math.floor(elapsed))){
             console.log("log capture")
             this.pic_list.push(Math.floor(elapsed));
