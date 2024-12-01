@@ -168,14 +168,14 @@ function takeScreenshot(num=0) {
         return;
     }
 
-    if(num>1){return;}
+    // if(num>1){return;}
 
     // const num = Date.now(); // Unique number for the filename
 
     // Convert the canvas content to a Blob and save it
-    // canvas.toBlob((blob) => {
-    //     saveBlob(blob, `screencapture-${num}.png`);
-    // }, 'image/png'); // Specify the image format as PNG
+    canvas.toBlob((blob) => {
+        saveBlob(blob, `screencapture-${num}.png`);
+    }, 'image/png'); // Specify the image format as PNG
 
     console.log('capture the screenshot');
 }
