@@ -128,8 +128,10 @@ async function main() {
     worker.onmessage = e => {
         const { data, sortTime } = e.data
         console.log("worker rcvd msg");
+        console.log(data)
         if (sortTime==0){
             cam.disableMovement = false
+            console.log("new scene");
         }
 
         if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
@@ -206,6 +208,16 @@ async function main() {
 async function loadScene({scene, file}) {
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear color and depth buffers
+    // Reset Gaussian data
+    allGaussians.gaussians.count = 0;
+    allGaussians.gaussians.colors = [];
+    allGaussians.gaussians.cov3Ds = [];
+    allGaussians.gaussians.opacities = [];
+    allGaussians.gaussians.positions = [];
+
+    // Request a render after clearing the scene
+    requestRender(); // Ensure the cleared scene is rendered immediately
     if (cam) cam.disableMovement = true
     document.querySelector('#loading-container').style.opacity = 1
 
@@ -418,7 +430,7 @@ function render(width, height, res) {
     if(cam.capture){
         capture=true;
         cam.capture=false;
-        console.log("cam capture is true")
+        // console.log("cam capture is true")
     }
     if (capture) {
         capture=false;
