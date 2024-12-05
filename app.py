@@ -42,29 +42,29 @@ def compute_cov3d(scale, mod, rot):
 
 def sort_by_opacity_and_size(opacities, colors, positions, cov3ds, scales):
     """
-    根据透明度和大小的组合效用值降序排序，并同步调整其他数据。
+    sort based on both opacity and size
     
-    参数:
-        opacities (np.ndarray): 不透明度数组，长度为 n。
-        colors (np.ndarray): 颜色数组，长度为 3 * n。
-        positions (np.ndarray): 位置数组，长度为 3 * n。
-        cov3ds (list): 协方差数组，长度为 6 * n。
-        scales (np.ndarray): 尺度数组，长度为 3 * n。
+    params:
+        opacities (np.ndarray): length of n
+        colors (np.ndarray): length of 3 * n
+        positions (np.ndarray): length of 3 * n
+        cov3ds (list): length of 6 * n
+        scales (np.ndarray): length of 3 * n
         
-    返回:
-        tuple: 排序后的 (opacities, colors, positions, cov3ds, scales)。
+    return:
+        tuple: sorted (opacities, colors, positions, cov3ds, scales)
     """
-    # 计算每个 splat 的大小：x * y * z
-    scales_reshaped = scales.reshape(-1, 3)  # 将 scales 变为 [n, 3] 的形状
-    size = np.prod(scales_reshaped, axis=1)  # 计算每个 splat 的大小
+    # calculate the size of each splat：x * y * z
+    scales_reshaped = scales.reshape(-1, 3)  # reshape the scales to [n, 3]
+    size = np.prod(scales_reshaped, axis=1)
     
-    # 计算效用值 U = opacity * size
+    # U = opacity * size
     utility_values = opacities * size
     
-    # 获取按效用值降序的索引
+    # get the sorted index based on the utility
     sorted_indices = np.argsort(utility_values)[::-1]
     
-    # 按索引重排数据
+    # sort the data based on the sorted index
     sorted_opacities = opacities[sorted_indices]
     sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
     sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
@@ -76,31 +76,31 @@ def sort_by_opacity_and_size(opacities, colors, positions, cov3ds, scales):
 
 def sort_by_brightness(opacities, colors, positions, cov3ds):
     """
-    根据 splat 的亮度值降序排序，并同步调整其他数据。
+    sort based on the splat brightness
     
-    参数:
-        opacities (np.ndarray): 不透明度数组，长度为 n。
-        colors (np.ndarray): 颜色数组，长度为 3 * n。
-        positions (np.ndarray): 位置数组，长度为 3 * n。
-        cov3ds (list): 协方差数组，长度为 6 * n。
+    params:
+        opacities (np.ndarray): length of n
+        colors (np.ndarray): length of 3 * n
+        positions (np.ndarray): length of 3 * n
+        cov3ds (list): length of 6 * n
         
-    返回:
-        tuple: 排序后的 (opacities, colors, positions, cov3ds)。
+    return:
+        tuple: sorted (opacities, colors, positions, cov3ds)
     """
-    # 提取 RGB 值
-    colors_reshaped = colors.reshape(-1, 3)  # 将 colors 变为 [n, 3] 的形状
+    # get the RGB value
+    colors_reshaped = colors.reshape(-1, 3)  # reshape the colors to [n, 3]
     
-    # 根据公式计算亮度值
+    # calculate the brightness
     brightness = (
-        0.299 * colors_reshaped[:, 0] +  # R 分量
-        0.587 * colors_reshaped[:, 1] +  # G 分量
-        0.114 * colors_reshaped[:, 2]    # B 分量
+        0.299 * colors_reshaped[:, 0] +  # R
+        0.587 * colors_reshaped[:, 1] +  # G
+        0.114 * colors_reshaped[:, 2]    # B
     )
     
-    # 获取按亮度值降序的索引
+    # get the sorted index
     sorted_indices = np.argsort(brightness)[::-1]
     
-    # 按索引重排数据
+    # sort the data based on the index
     sorted_opacities = opacities[sorted_indices]
     sorted_colors = colors_reshaped[sorted_indices].flatten()
     sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
@@ -111,26 +111,26 @@ def sort_by_brightness(opacities, colors, positions, cov3ds):
 
 def sort_by_scale(opacities, colors, positions, cov3ds, scales):
     """
-    根据 splat 的大小 (scale 的乘积) 降序排序，并同步调整其他数据。
+    sort based on the splat's size
     
-    参数:
-        opacities (np.ndarray): 不透明度数组，长度为 n。
-        colors (np.ndarray): 颜色数组，长度为 3 * n。
-        positions (np.ndarray): 位置数组，长度为 3 * n。
-        cov3ds (list): 协方差数组，长度为 6 * n。
-        scales (np.ndarray): 尺度数组，长度为 3 * n (每 3 个值为一个 splat 的 [x, y, z])。
+    params:
+        opacities (np.ndarray): length of n
+        colors (np.ndarray): length of 3 * n
+        positions (np.ndarray): length of 3 * n
+        cov3ds (list): length of 6 * n
+        scales (np.ndarray): length of 3 * n (every 3 values is a splat's [x, y, z])
         
-    返回:
-        tuple: 排序后的 (opacities, colors, positions, cov3ds, scales)。
+    return:
+        tuple: sorted (opacities, colors, positions, cov3ds, scales)
     """
-    # 计算每个 splat 的效用值 U = x * y * z
-    scales_reshaped = scales.reshape(-1, 3)  # 将 scales 变为 [n, 3] 的形状
-    utility_values = np.prod(scales_reshaped, axis=1)  # 计算每个 splat 的大小
+    # calculate the utility of each splat U = x * y * z
+    scales_reshaped = scales.reshape(-1, 3)  # reshape the scales to [n, 3]
+    utility_values = np.prod(scales_reshaped, axis=1)  # calculate the size of each splat
     
-    # 获取按效用值降序的索引
+    # get the sorted index
     sorted_indices = np.argsort(utility_values)[::-1]
     
-    # 按索引重排数据
+    # sort the data based on the index
     sorted_opacities = opacities[sorted_indices]
     sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
     sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
@@ -142,21 +142,21 @@ def sort_by_scale(opacities, colors, positions, cov3ds, scales):
 
 def sort_data(opacities, colors, positions, cov3ds):
     """
-    根据 opacities 降序对数据进行排序，并同步调整 colors、positions 和 cov3ds。
+    sorting based on the opacities (descending)
     
-    参数:
-        opacities (np.ndarray): 不透明度数组，长度为 n。
-        colors (np.ndarray): 颜色数组，长度为 3 * n。
-        positions (np.ndarray): 位置数组，长度为 3 * n。
-        cov3ds (list): 协方差数组，长度为 6 * n。
+    params:
+        opacities (np.ndarray): length of n
+        colors (np.ndarray): length of 3 * n
+        positions (np.ndarray): length of 3 * n
+        cov3ds (list): length of 6 * n
         
-    返回:
-        tuple: 排序后的 (opacities, colors, positions, cov3ds)。
+    return:
+        tuple: sorted (opacities, colors, positions, cov3ds)
     """
-    # 获取降序排序索引
+    # the the sorting index
     sorted_indices = np.argsort(opacities)[::-1]
     
-    # 根据排序索引重排数据
+    # resort the data based on the utility function
     sorted_opacities = opacities[sorted_indices]
     sorted_colors = colors.reshape(-1, 3)[sorted_indices].flatten()
     sorted_positions = positions.reshape(-1, 3)[sorted_indices].flatten()
@@ -309,12 +309,18 @@ def sort_data(opacities, colors, positions, cov3ds):
 
 @app.route('/api/load_scene', methods=['GET'])
 def load_scene():
-    # 读取本地 JSON 文件
+    # read local json data
     try:
-        with open('brightness_rooms.json', 'r') as file:
+        with open('brightness_rooms.json', 'r') as file: # change to the json file name that you want to load
             scene_data = json.load(file)
     except FileNotFoundError:
         return jsonify({"error": "File 'rooms.json' not found"}), 404
+    
+    try:
+        with open('logged_path_60.json', 'r') as file: # change to the json file name that you want to load
+            path_data = json.load(file)
+    except FileNotFoundError:
+        return jsonify({"error": "File 'logged_path.json' not found"}), 404
 
     opacities = np.array(scene_data['opacities'])
     colors = np.array(scene_data['colors'])
@@ -327,11 +333,21 @@ def load_scene():
         global scene_min, scene_max
         num_batches = (gaussian_count + batch_size - 1) // batch_size
         print(f"Total batches: {num_batches}")
+        # data = {
+        #         'path': {
+        #             'colors': colors_batch,
+        #             'cov3Ds': cov3ds_batch,
+        #             'opacities': opacities_batch,
+        #             'positions': positions_batch,
+        #             'count': count,
+        #             'sceneMin': scene_min_batch,
+        #             'sceneMax': scene_max_batch,
+        #             'total_gs_num': gaussian_count
+        #         }
+        #     }
+        # yield f"data: {json.dumps(data)}\n\n"
 
-        firstTime = True
         for batch_index in range(num_batches):
-            if batch_index != 0:
-                firstTime = False
             start_index = batch_index * batch_size
             end_index = min(start_index + batch_size, gaussian_count)
 
@@ -340,7 +356,7 @@ def load_scene():
             positions_batch = positions[3 * start_index: 3 * end_index]
             cov3ds_batch = cov3ds[6 * start_index: 6 * end_index].tolist()
 
-            # 更新场景的最小值和最大值
+            # update scene_max and scene_min
             for position in positions_batch:
                 scene_min = np.minimum(scene_min, position)
                 scene_max = np.maximum(scene_max, position)
@@ -362,12 +378,15 @@ def load_scene():
                     'total_gs_num': gaussian_count
                 }
             }
-
+            # delay = 1 # delay = original delay/batch_num
+            # time.sleep(delay)
             yield f"data: {json.dumps(data)}\n\n"
-            time.sleep(2)
+            # delay = 1 # delay = original delay/batch_num
+            # time.sleep(delay)
 
-    # 分批传输数据
-    batch_size = gaussian_count // 3  # 调整批量大小
+    # send the data in batches
+    batch_num = 5 # number of batches (+1)
+    batch_size = gaussian_count // batch_num  # control the size of the batch
     return Response(generate_batches(batch_size, gaussian_count), content_type='text/event-stream')
 
 if __name__ == '__main__':
