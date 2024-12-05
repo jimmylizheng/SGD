@@ -327,9 +327,7 @@ class Camera {
         settings.renderResolution=1;
         this.pathStartTime = performance.now(); // Start time for replay
         this.isReplayingPath = true;
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        // const replay = () => {
-        const replay = async () => {
+        const replay = () => {
             if (!this.isReplayingPath) return; // Stop if replay is interrupted
     
             // Call the existing updatePathReplay function
@@ -337,7 +335,6 @@ class Camera {
     
             // Trigger rendering
             requestRender();
-            await delay(20);
     
             // Schedule the next frame
             requestAnimationFrame(replay);
@@ -352,36 +349,25 @@ class Camera {
         // startPathReplay_helper();
         // this.isReplayingPath=true;
         // clear the gl buffer
-        // gl.clearColor(0, 0, 0, 0);
-        // gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
         console.log("start replay");
-        gl.clearColor(0, 0, 0, 0)
-        // gl.clear(gl.COLOR_BUFFER_BIT)
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear color and depth buffers
-        // Reset Gaussian data
         allGaussians.gaussians.count = 0;
         allGaussians.gaussians.colors = [];
         allGaussians.gaussians.cov3Ds = [];
         allGaussians.gaussians.opacities = [];
         allGaussians.gaussians.positions = [];
-        worker.postMessage(allGaussians);
-        await gizmoRenderer.init()
-        console.log("gizmo finish init")
+        const clear_buf = () => {
+            // clear the gl buffer
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
     
-        // Request a render after clearing the scene
-        requestAnimationFrame(() => render()) 
-        requestRender(); // Ensure the cleared scene is rendered immediately
-        // const clear_buf = () => {
-        //     // clear the gl buffer
-        //     gl.clearColor(0, 0, 0, 0);
-        //     gl.clear(gl.COLOR_BUFFER_BIT);
-    
-        //     // Trigger rendering
-        //     requestRender();
-        // };
+            // Trigger rendering
+            requestRender();
+        };
         // Start the replay loop
         // requestAnimationFrame(clear_buf);
-        // requestRender()
+        requestRender()
         console.log("clear the previous data and reload the scene");
         // Run both functions concurrently and wait for both to complete
         // await sleep(2000); // Sleep for 2 seconds

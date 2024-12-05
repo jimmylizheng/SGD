@@ -73,6 +73,7 @@ directory2 = "data/"
 #             "op_1_10", "op_10_1", "op_1_30", "op_10_3", "op_1_10", "op_10_1", "op_1_30", "op_10_3", ]
 dir_list = ["na_1_10", "na_10_1", "na_1_30", "na_10_3", "br_10_1", "br_10_3", 
             "op_10_1", "op_10_3", "sp_10_1", "sp_10_3", ]
+# dir_list = ["na_1_10"]
 # dir_list = ["na_1_10", "na_10_1", "na_1_30", "na_10_3"]
 starting_time = 10  # Replace with your start value
 ending_time = 55  # Replace with your end value
