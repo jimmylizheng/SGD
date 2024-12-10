@@ -12,18 +12,33 @@ Run the command "python3 -m http.server 8000" in your CLI to launch the client.
 
 Access the client rendering result through "http://localhost:8000/"
 
-## Live Demo
+## Step-by-Step Guide
 
-[https://webgl-gaussian-splatting.vercel.app/](https://webgl-gaussian-splatting.vercel.app/).
+### 
+1. Prepare the Gaussian Data
+Download the `.ply` file containing the Gaussian splats using the following command:
+wget <URL_TO_PLY_FILE>
+
+2. Process the Data
+Use processData.py to convert the .ply file into a .json file:
+python3 processData.py
+
+3. Configure the Backend
+Edit app.py to point to the generated .json file by modifying the name of the relevant variable:
+with open('brightness_rooms.json', 'r') as file
+
+4. Run the Flask Backend
+Start the backend server with the following command:
+python3 -m http.server 8000
+
+6. Access the Client
+Open your web browser and navigate to the following URL to view the rendering:
+http://localhost:8000/
 
 ## Background
 
 I wanted to get a better understanding on how 3D gaussians splats are used in rasterization pipelines to achieve real time results, so I tried to reimplement the rendering algorithm in a framework I'm familiar with (WebGL).
 The next step if I find the time will be to make a WebGPU version too in order to compare the performances.
-
-## NeRFs and Gaussian Splatting
-
-(WIP)
 
 ## Implementation Details
 
@@ -56,13 +71,23 @@ The visual impact is clearly negligible compared to the performance gain.
 
 ## Code Structure
 
-src/
-- **main.js**: Setup and render
-- **loader.js**: Load and pre-process a .ply file containing gaussian data
-- **worker-sort.js**: Web Worker that sorts gaussian splats by depth
-- **camera.js**: Camera manager
+- **processData.py**: Processes a .ply file to generate a structured .json file for scheduler.
+- **app.py**: Flask backend that serves the rendered scene and handles communication between the client 
+and server.
+- **dist_plot.py**: Plot cdf for different splat attributes.
+- **evaluation.py**: Evaluation script that calculate average SSIM, average PSNR and QoE for multiple directories.
+- **evaluation_cmp.py**: Evaluation script that calculate average SSIM and average PSNR for two directories.
+- **bar_plot.py**: Produce bar plots to visualize the result.
 
-- **utils.js**: WebGL & utilities
+src/
+- **main.js**: Setup the main thread and do the rendering.
+- **load_worker.js**: Worker thread script that receives data stream from the server and send it to the main thread for rendering.
+- **loader.js**: Load and pre-process a .ply file containing gaussian data (not used by SGD).
+- **worker-sort.js**: Web Worker that sorts gaussian splats by depth.
+- **camera.js**: Camera manager.
+- **utils.js**: WebGL & utilities.
+- **gui.js**: Setup GUI.
+- **gizmo.js**: gizmo render code.
 
 shaders/
 - **splat_vertex.glsl**: vertex shader that processes 4 vertices per gaussian to compute its 2d bounding quad
@@ -75,3 +100,5 @@ shaders/
 for Real-Time Radiance Field Rendering)
 
 - [Webgl Splat Renderer by antimatter15](https://github.com/antimatter15/splat): clean and concise implementation with no external library from which are coming many optimizations related to sorting (web-worker, view matrix difference treshold, count sort)
+
+- [3D Gaussian Splatting Web Viewer](https://github.com/kishimisu/Gaussian-Splatting-WebGL): Original code base that this project based on.

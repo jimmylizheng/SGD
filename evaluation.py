@@ -69,12 +69,10 @@ def compute_ssim_psnr(dir1, dir2, a, b, file_extension=".png", is_qoe=False):
 # Directories and range
 directory1 = "data/gt" # groundtruth directory
 directory2 = "data/"
-# dir_list = ["na_1_10", "na_10_1", "na_1_30", "na_10_3", "br_1_10", "br_10_1", "br_1_30", "br_10_3", 
-#             "op_1_10", "op_10_1", "op_1_30", "op_10_3", "op_1_10", "op_10_1", "op_1_30", "op_10_3", ]
+
 dir_list = ["na_1_10", "na_10_1", "na_1_30", "na_10_3", "br_10_1", "br_10_3", 
             "op_10_1", "op_10_3", "sp_10_1", "sp_10_3", ]
-# dir_list = ["na_1_10"]
-# dir_list = ["na_1_10", "na_10_1", "na_1_30", "na_10_3"]
+
 starting_time = 10  # Replace with your start value
 ending_time = 55  # Replace with your end value
 file_ext = ".png"  # Change file extension if needed (e.g., ".jpg")
