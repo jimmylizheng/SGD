@@ -14,6 +14,7 @@ CORS(app)  # allow cross domain request?
 
 scene_min = np.array([float('inf')] * 3)
 scene_max = np.array([-float('inf')] * 3)
+is_first_path=True
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -87,7 +88,7 @@ def sort_by_brightness(opacities, colors, positions, cov3ds):
     return:
         tuple: sorted (opacities, colors, positions, cov3ds)
     """
-    # get the RGB value
+    # get the RGB values
     colors_reshaped = colors.reshape(-1, 3)  # reshape the colors to [n, 3]
     
     # calculate the brightness
@@ -316,11 +317,11 @@ def load_scene():
     except FileNotFoundError:
         return jsonify({"error": "File 'rooms.json' not found"}), 404
     
-    try:
-        with open('logged_path_60.json', 'r') as file: # change to the json file name that you want to load
-            path_data = json.load(file)
-    except FileNotFoundError:
-        return jsonify({"error": "File 'logged_path.json' not found"}), 404
+    # try:
+    #     with open('logged_path_60.json', 'r') as file: # change to the json file name that you want to load
+    #         path_data = json.load(file)
+    # except FileNotFoundError:
+    #     return jsonify({"error": "File 'logged_path.json' not found"}), 404
 
     opacities = np.array(scene_data['opacities'])
     colors = np.array(scene_data['colors'])
@@ -330,22 +331,16 @@ def load_scene():
     print("Finished reading data")
 
     def generate_batches(batch_size, gaussian_count):
-        global scene_min, scene_max
+        global scene_min, scene_max, is_first_path
+        # if is_first_path:
+        #     is_first_path=False
+        #     data = {
+        #             'is_path': True,
+        #             'path': path_data
+        #         }
+        #     yield f"data: {json.dumps(data)}\n\n"
         num_batches = (gaussian_count + batch_size - 1) // batch_size
         print(f"Total batches: {num_batches}")
-        # data = {
-        #         'path': {
-        #             'colors': colors_batch,
-        #             'cov3Ds': cov3ds_batch,
-        #             'opacities': opacities_batch,
-        #             'positions': positions_batch,
-        #             'count': count,
-        #             'sceneMin': scene_min_batch,
-        #             'sceneMax': scene_max_batch,
-        #             'total_gs_num': gaussian_count
-        #         }
-        #     }
-        # yield f"data: {json.dumps(data)}\n\n"
 
         for batch_index in range(num_batches):
             start_index = batch_index * batch_size
@@ -367,6 +362,7 @@ def load_scene():
             count = end_index - start_index
 
             data = {
+                # 'is_path': False,
                 'gaussians': {
                     'colors': colors_batch,
                     'cov3Ds': cov3ds_batch,
@@ -378,6 +374,7 @@ def load_scene():
                     'total_gs_num': gaussian_count
                 }
             }
+            # add delay to the server
             # delay = 1 # delay = original delay/batch_num
             # time.sleep(delay)
             yield f"data: {json.dumps(data)}\n\n"
