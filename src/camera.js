@@ -294,30 +294,7 @@ class Camera {
         requestRender()
     }
 
-    // functions for implementing path following function
-    // setPath(path, duration) {
-    //     console.log('execute setPath()');
-    //     this.path = path; // Array of waypoints with position and target
-    //     this.pathDuration = duration; // Total time to complete the path
-    //     this.pathStartTime = null;
-    //     this.isFollowingPath = false;
-    // }
-
-    // startPathFollow() {
-    //     console.log('execute startPathFollow()');
-    //     if (!this.path || this.path.length < 2) {
-    //         console.error("Path is not defined or too short!");
-    //         return;
-    //     }
-    //     this.pathStartTime = performance.now();
-    //     this.isFollowingPath = true;
-    // }
-
-    // stopPathFollow() {
-    //     console.log('execute stopPathFollow()');
-    //     this.isFollowingPath = false;
-    // }
-
+    // functions for implementing path replay function
     async startPathReplay_helper() {
         this.pic_list=[]; 
         if (!this.loggedPath || this.loggedPath.length < 2) {
@@ -430,60 +407,6 @@ class Camera {
         this.update();
     }
 
-    // updatePathFollow() {
-    //     // console.log('execute updatePathFollow()');
-    //     if (!this.isFollowingPath) return;
-
-    //     // performance.now(): Unit: Milliseconds (ms)
-    //     const elapsed = (performance.now() - this.pathStartTime) / 1000; // Time in seconds
-    //     const t = elapsed / this.pathDuration; // Normalized time [0, 1]
-
-    //     if (t >= 1) {
-    //         this.isFollowingPath = false; // Stop when the path is complete
-    //         return;
-    //     }
-
-    //     // Determine which segment of the path we're in
-    //     const segmentCount = this.path.length - 1;
-    //     const segmentIndex = Math.min(Math.floor(t * segmentCount), segmentCount - 1);
-    //     const segmentT = (t * segmentCount) - segmentIndex;
-
-    //     const start = this.path[segmentIndex];
-    //     const end = this.path[segmentIndex + 1];
-
-    //     // Interpolate position
-    //     const currentPosition = [
-    //         start.position[0] + (end.position[0] - start.position[0]) * segmentT,
-    //         start.position[1] + (end.position[1] - start.position[1]) * segmentT,
-    //         start.position[2] + (end.position[2] - start.position[2]) * segmentT,
-    //     ];
-
-    //     // Interpolate target
-    //     const currentTarget = [
-    //         start.target[0] + (end.target[0] - start.target[0]) * segmentT,
-    //         start.target[1] + (end.target[1] - start.target[1]) * segmentT,
-    //         start.target[2] + (end.target[2] - start.target[2]) * segmentT,
-    //     ];
-
-    //     // Update camera parameters
-    //     this.target = currentTarget;
-    //     vec3.copy(this.pos, currentPosition); // Camera position
-    //     this.update();
-    // }
-
-    // Functions for implementing path logging function
-
-    // startPathLogging(interval = 100) {
-    //     console.log("executing startPathLogging")
-    //     this.loggedPath = [];
-    //     this.pathStartTime = performance.now(); // Record the start time
-    //     this.pathEndTime = null;
-    //     if (logInterval) return; // Avoid duplicate intervals
-    //     logInterval = setInterval(() => {
-    //         cam.logCurrentPosition();
-    //     }, interval);
-    // }
-
     startPathLogging(interval = 100) {
         console.log("executing startPathLogging");
         this.loggedPath = [];
@@ -494,14 +417,6 @@ class Camera {
         }, interval);
     }
 
-    // stopPathLogging() {
-    //     console.log("executing stopPathLogging")
-    //     this.pathEndTime = performance.now(); // Record the end time
-    //     if (logInterval) {
-    //         clearInterval(logInterval);
-    //         logInterval = null;
-    //     }
-    // }
 
     logCurrentPosition() {
         // const currentPosition = this.getPos();

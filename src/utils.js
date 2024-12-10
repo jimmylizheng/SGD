@@ -129,36 +129,6 @@ function saveBlob(blob, filename) {
 
 // function that can capture screenshot when called
 function takeScreenshot(num=0) {
-    // const width = gl.canvas.width;
-    // const height = gl.canvas.height;
-    // const pixels = new Uint8Array(width * height * 4);
-    // gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-    // const flippedPixels = new Uint8Array(width * height * 4);
-    // for (let y = 0; y < height; y++) {
-    //     for (let x = 0; x < width; x++) {
-    //         const destIdx = ((height - y - 1) * width + x) * 4;
-    //         const srcIdx = (y * width + x) * 4;
-    //         flippedPixels[destIdx] = pixels[srcIdx];
-    //         flippedPixels[destIdx + 1] = pixels[srcIdx + 1];
-    //         flippedPixels[destIdx + 2] = pixels[srcIdx + 2];
-    //         flippedPixels[destIdx + 3] = pixels[srcIdx + 3];
-    //     }
-    // }
-
-    // const screenshotCanvas = document.createElement('canvas');
-    // screenshotCanvas.width = width;
-    // screenshotCanvas.height = height;
-    // const screenshotCtx = screenshotCanvas.getContext('2d');
-    // const imageData = new ImageData(new Uint8ClampedArray(flippedPixels), width, height);
-    // screenshotCtx.putImageData(imageData, 0, 0);
-
-    // const dataURL = screenshotCanvas.toDataURL('image/png');
-    // const link = document.createElement('a');
-    // link.href = dataURL;
-    // link.download = 'screenshot.png';
-    // link.click();
-
     // Get the canvas element by id
     const canvas = document.getElementById("canvas");
 
@@ -173,9 +143,9 @@ function takeScreenshot(num=0) {
     // const num = Date.now(); // Unique number for the filename
 
     // Convert the canvas content to a Blob and save it
-    // canvas.toBlob((blob) => {
-    //     saveBlob(blob, `screencapture-${num}.png`);
-    // }, 'image/png'); // Specify the image format as PNG
+    canvas.toBlob((blob) => {
+        saveBlob(blob, `screencapture-${num}.png`);
+    }, 'image/png'); // Specify the image format as PNG
 
     console.log('capture the screenshot');
 }

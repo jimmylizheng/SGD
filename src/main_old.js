@@ -13,8 +13,6 @@ let sceneMin, sceneMax
 let gizmoRenderer = new GizmoRenderer()
 let positionBuffer, positionData, opacityData
 
-let load_finish=false
-
 let allGaussians = {
     gaussians: {
         colors: [],
@@ -46,7 +44,12 @@ const settings = {
     showGizmo: true,
 
     // Camera path following
+    // startPathFollow: () => cam.startPathFollow(), // Starts camera movement along path
+    // stopPathFollow: () => cam.stopPathFollow(),  // Stops camera movement along path
+    // pathDuration: 10, // Default duration (in seconds)
+    // setPath: () => {} // Placeholder function, updated later
     startPathLogging: () => cam.startPathLogging(100), // Start logging with an interval of 100ms
+    // stopPathLogging: () => stopPathLogging(),     // Stop logging
     savePath: () => cam.saveLoggedPath(),         // Save the logged path
     loadPath: () => {},                           // Placeholder for loading
     startReplay: () => cam.startPathReplay(),     // Start replaying the path
@@ -83,10 +86,29 @@ document.addEventListener('keydown', (event) => {
     // Check if the 'c' key is pressed
     if (event.key === 'c' || event.key === 'C') {
         console.log('C key pressed: Taking screenshot...');
-        // takeScreenshot
+        // takeScreenshot();
         capture = true;
     }
 });
+
+// Variables and functons for path logging function
+// let logInterval = null;
+
+// function startPathLogging(interval = 100) {
+//     console.log("executing startPathLogging")
+//     if (logInterval) return; // Avoid duplicate intervals
+    // logInterval = setInterval(() => {
+    //     cam.logCurrentPosition();
+    // }, interval);
+// }
+
+// function stopPathLogging() {
+//     console.log("executing stopPathLogging")
+//     if (logInterval) {
+//         clearInterval(logInterval);
+//         logInterval = null;
+//     }
+// }
 
 async function main() {
     // Setup webgl context and buffers
@@ -102,7 +124,7 @@ async function main() {
     // Setup web worker for multi-threaded sorting
     worker = new Worker('src/worker-sort.js')
     // Setup web worker for multi-threaded scene loading
-    load_worker = new Worker('src/load_worker.js')
+    // load_worker = new Worker('src/load_worker.js')
 
     // Event that receives sorted gaussian data from the worker
     worker.onmessage = e => {
@@ -139,62 +161,61 @@ async function main() {
         requestRender()
     }
 
-    load_worker.onmessage = function(event) {                
-        // parse the received data for each batch
-        const responseData = event.data;
-        console.log(responseData); // log the returned data
-        if (!load_finish)
-        {
-            // append new data to current data
-            allGaussians.gaussians.count += responseData.gaussians.count;
-            allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
-            allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
-            allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
-            allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
+    // load_worker.onmessage = function(event) {                
+    //     // parse the received data for each batch
+    //     const responseData = JSON.parse(event.data);
+    //     console.log(responseData); // log the returned data
 
-            gaussianCount = allGaussians.gaussians.count // ?? question here
-            // **update sceneMin and sceneMax for each batch**
-            sceneMin = responseData.gaussians.sceneMin
-            sceneMax = responseData.gaussians.sceneMax
+    //     {
+    //         // append new data to current data
+    //         allGaussians.gaussians.count += responseData.gaussians.count;
+    //         allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
+    //         allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
+    //         allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
+    //         allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
 
-            // debug info
-            console.log("Updated sceneMin:", sceneMin);
-            console.log("Updated sceneMax:", sceneMax);
+    //         gaussianCount = allGaussians.gaussians.count // ?? question here
+    //         // **update sceneMin and sceneMax for each batch**
+    //         sceneMin = responseData.gaussians.sceneMin
+    //         sceneMax = responseData.gaussians.sceneMax
+
+    //         // debug info
+    //         console.log("Updated sceneMin:", sceneMin);
+    //         console.log("Updated sceneMax:", sceneMax);
             
-            // hide the loading icon when starting receving information
-            if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
-                document.querySelector('#loading-container').style.opacity = 0
-                cam.disableMovement = false
-            }
+    //         // hide the loading icon when starting receving information
+    //         if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
+    //             document.querySelector('#loading-container').style.opacity = 0
+    //             cam.disableMovement = false
+    //         }
 
-            // process the received 3DGS data
-            worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
-            // const cameraParameters = scene ? defaultCameraParameters[scene] : {}
-            // if (cam == null) cam = new Camera(cameraParameters)
+    //         // process the received 3DGS data
+    //         worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
+    //         // const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+    //         // if (cam == null) cam = new Camera(cameraParameters)
 
-            // else cam.setParameters(cameraParameters)
-            cam.update()
+    //         // else cam.setParameters(cameraParameters)
+    //         cam.update()
 
-            // Update GUI
-            // settings.maxGaussians controls the max number of splats to be rendered
-            if(settings.maxGaussians>gaussianCount){
-                settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
-            }
-            else{
-                settings.maxGaussians = Math.max(settings.maxGaussians, gaussianCount)
-            }
-            maxGaussianController.max(gaussianCount)
-            maxGaussianController.updateDisplay()
+    //         // Update GUI
+    //         // settings.maxGaussians controls the max number of splats to be rendered
+    //         if(settings.maxGaussians>gaussianCount){
+    //             settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
+    //         }
+    //         else{
+    //             settings.maxGaussians = Math.max(settings.maxGaussians, gaussianCount)
+    //         }
+    //         maxGaussianController.max(gaussianCount)
+    //         maxGaussianController.updateDisplay()
 
-            // close the event souorce
-            if (responseData.gaussians.total_gs_num<=gaussianCount) {
-                console.log("load finishes.");
-                load_finish=true;
-                // console.log("cam.disableMovement: ",cam.disableMovement);
-                // // capture the screenshot
-            }
-        }
-    };
+    //         // close the event souorce
+    //         if (responseData.gaussians.total_gs_num<=gaussianCount) {
+    //             console.log("load finishes.");
+    //             // console.log("cam.disableMovement: ",cam.disableMovement);
+    //             // // capture the screenshot
+    //         }
+    //     }
+    // };
 
     // Setup GUI
     initGUI()
@@ -239,14 +260,161 @@ async function main() {
 //     }
 // }
 
-// // Load a .ply scene specified as a name (URL fetch) or local file
+// Load a .ply scene specified as a name (URL fetch) or local file
+async function loadScene({scene, file}) {
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    if (cam) cam.disableMovement = true
+    document.querySelector('#loading-container').style.opacity = 1
+
+    
+    sceneMin = new Array(3).fill(Infinity)
+    sceneMax = new Array(3).fill(-Infinity)
+
+    // Create a StreamableReader from a URL Response object
+    if (scene != null) {
+        console.log(scene);
+        scene = scene.split('(')[0].trim();
+        console.log(scene);
+        const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // specify the port
+        try {
+            // if (cam && cam.LoadEnd) {
+            //     // clear the previous data
+            //     cam.LoadEnd=false;
+            //     allGaussians.gaussians.count = 0;
+            //     allGaussians.gaussians.colors = [];
+            //     allGaussians.gaussians.cov3Ds = [];
+            //     allGaussians.gaussians.opacities = [];
+            //     allGaussians.gaussians.positions = [];
+            //     console.log("clear the previous data and reload the scene");
+            // }
+            
+            console.log("start to process SSE stream");
+
+            const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+            if (cam == null) cam = new Camera(cameraParameters)
+
+            allGaussians.gaussians.count = 0;
+            allGaussians.gaussians.colors = [];
+            allGaussians.gaussians.cov3Ds = [];
+            allGaussians.gaussians.opacities = [];
+            allGaussians.gaussians.positions = [];
+            worker.postMessage(allGaussians);
+            gizmoRenderer.render();
+            console.log("clear the previous data and reload the scene");
+    
+            // use EventSource to process SSE stream
+            const eventSource = new EventSource(url);
+
+            // start replaying when the client is receiving the data
+            // cam.startPathReplay();
+            
+            // TODO: [Violation] 'message' handler took <N>ms
+            eventSource.onmessage = function(event) {                
+                // parse the received data for each batch
+                const responseData = JSON.parse(event.data);
+                console.log(responseData); // log the returned data
+
+                // if (responseData.is_first && (cam.isReplayingPath || cam.is_first_load)){
+                //     cam.is_first_load=false;
+                //     startPathReplay_helper();
+                // }
+                // else
+                {
+                    // append new data to current data
+                    allGaussians.gaussians.count += responseData.gaussians.count;
+                    allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
+                    allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
+                    allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
+                    allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
+
+                    gaussianCount = allGaussians.gaussians.count // ?? question here
+                    // **update sceneMin and sceneMax for each batch**
+                    sceneMin = responseData.gaussians.sceneMin
+                    sceneMax = responseData.gaussians.sceneMax
+
+                    // debug info
+                    console.log("Updated sceneMin:", sceneMin);
+                    console.log("Updated sceneMax:", sceneMax);
+                    
+                    // hide the loading icon when starting receving information
+                    if (getComputedStyle(document.querySelector('#loading-container')).opacity != 0) {
+                        document.querySelector('#loading-container').style.opacity = 0
+                        cam.disableMovement = false
+                    }
+
+                    // process the received 3DGS data
+                    worker.postMessage(allGaussians); // send the accumulated 3DGS data to Web Worker
+                    // const cameraParameters = scene ? defaultCameraParameters[scene] : {}
+                    // if (cam == null) cam = new Camera(cameraParameters)
+
+                    // else cam.setParameters(cameraParameters)
+                    cam.update()
+
+                    // Update GUI
+                    // settings.maxGaussians controls the max number of splats to be rendered
+                    if(settings.maxGaussians>gaussianCount){
+                        settings.maxGaussians = Math.min(settings.maxGaussians, gaussianCount)
+                    }
+                    else{
+                        settings.maxGaussians = Math.max(settings.maxGaussians, gaussianCount)
+                    }
+                    maxGaussianController.max(gaussianCount)
+                    maxGaussianController.updateDisplay()
+
+                    // close the event souorce
+                    if (responseData.gaussians.total_gs_num<=gaussianCount) {
+                        cam.LoadEnd=true;
+                        eventSource.close();
+                        console.log("EventSource connection closed.");
+                        // console.log("cam.disableMovement: ",cam.disableMovement);
+                        // // capture the screenshot
+                        // setTimeout(() => {
+                        //     console.log('call the function to capture the screenshot');
+                        //     capture=true;
+                        // }, 2000);
+                    }
+                }
+            };
+    
+            // eventSource.onerror = function(event) {
+            //     // deal with the error situation
+            //     console.error('Error occurred in SSE stream:', event);
+            //     eventSource.close();
+            // };
+    
+            eventSource.onopen = function() {
+                console.log('SSE connection established');
+            };
+
+            // Setup camera
+    
+        } catch (error) {
+            console.error('Error loading scene:', error);
+            return;
+        }
+    }
+     else if (file != null) {
+        contentLength = file.size
+        reader = file.stream().getReader()
+        settings.scene = 'custom'
+    } else {
+        throw new Error('No scene or file specified')
+    }
+    // Send gaussian data to the worker
+    
+    // worker.postMessage({ gaussians: {
+    //     ...data, count: gaussianCount
+    // } })
+}
+
+// Load a .ply scene specified as a name (URL fetch) or local file
 // async function loadScene({scene, file}) {
 //     gl.clearColor(0, 0, 0, 0)
 //     gl.clear(gl.COLOR_BUFFER_BIT)
 //     if (cam) cam.disableMovement = true
 //     document.querySelector('#loading-container').style.opacity = 1
 
-    
 //     sceneMin = new Array(3).fill(Infinity)
 //     sceneMax = new Array(3).fill(-Infinity)
 
@@ -255,20 +423,11 @@ async function main() {
 //         console.log(scene);
 //         scene = scene.split('(')[0].trim();
 //         console.log(scene);
-//         const url = `http://127.0.0.1:5000/api/load_scene?scene=${encodeURIComponent(scene)}`; // specify the port
+//         // preprocess the scene name and send it to the load_worker
+
+//         // load_worker.postMessage({scene, file});
 //         try {
-//             // if (cam && cam.LoadEnd) {
-//             //     // clear the previous data
-//             //     cam.LoadEnd=false;
-//             //     allGaussians.gaussians.count = 0;
-//             //     allGaussians.gaussians.colors = [];
-//             //     allGaussians.gaussians.cov3Ds = [];
-//             //     allGaussians.gaussians.opacities = [];
-//             //     allGaussians.gaussians.positions = [];
-//             //     console.log("clear the previous data and reload the scene");
-//             // }
-            
-//             console.log("start to process SSE stream");
+//             console.log("start to wait for worker loading");
 
 //             const cameraParameters = scene ? defaultCameraParameters[scene] : {}
 //             if (cam == null) cam = new Camera(cameraParameters)
@@ -281,24 +440,16 @@ async function main() {
 //             worker.postMessage(allGaussians);
 //             gizmoRenderer.render();
 //             console.log("clear the previous data and reload the scene");
-    
-//             // use EventSource to process SSE stream
-//             const eventSource = new EventSource(url);
+//             load_worker.postMessage({scene, file});
 
 //             // start replaying when the client is receiving the data
 //             // cam.startPathReplay();
             
-//             // TODO: [Violation] 'message' handler took <N>ms
-//             eventSource.onmessage = function(event) {                
+//             load_worker.onmessage = function(event) {                
 //                 // parse the received data for each batch
 //                 const responseData = JSON.parse(event.data);
 //                 console.log(responseData); // log the returned data
 
-//                 // if (responseData.is_first && (cam.isReplayingPath || cam.is_first_load)){
-//                 //     cam.is_first_load=false;
-//                 //     startPathReplay_helper();
-//                 // }
-//                 // else
 //                 {
 //                     // append new data to current data
 //                     allGaussians.gaussians.count += responseData.gaussians.count;
@@ -343,15 +494,9 @@ async function main() {
 
 //                     // close the event souorce
 //                     if (responseData.gaussians.total_gs_num<=gaussianCount) {
-//                         cam.LoadEnd=true;
-//                         eventSource.close();
-//                         console.log("EventSource connection closed.");
+//                         console.log("load finishes.");
 //                         // console.log("cam.disableMovement: ",cam.disableMovement);
 //                         // // capture the screenshot
-//                         // setTimeout(() => {
-//                         //     console.log('call the function to capture the screenshot');
-//                         //     capture=true;
-//                         // }, 2000);
 //                     }
 //                 }
 //             };
@@ -361,15 +506,8 @@ async function main() {
 //             //     console.error('Error occurred in SSE stream:', event);
 //             //     eventSource.close();
 //             // };
-    
-//             eventSource.onopen = function() {
-//                 console.log('SSE connection established');
-//             };
-
-//             // Setup camera
-    
 //         } catch (error) {
-//             console.error('Error loading scene:', error);
+//             console.error('Error loading scene in main.js:', error);
 //             return;
 //         }
 //     }
@@ -386,57 +524,6 @@ async function main() {
 //     //     ...data, count: gaussianCount
 //     // } })
 // }
-
-// Load a .ply scene specified as a name (URL fetch) or local file
-async function loadScene({scene, file}) {
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-    if (cam) cam.disableMovement = true
-    document.querySelector('#loading-container').style.opacity = 1
-
-    sceneMin = new Array(3).fill(Infinity)
-    sceneMax = new Array(3).fill(-Infinity)
-
-    // Create a StreamableReader from a URL Response object
-    if (scene != null) {
-        console.log(scene);
-        scene = scene.split('(')[0].trim();
-        console.log(scene);
-        // preprocess the scene name and send it to the load_worker
-
-        // load_worker.postMessage({scene, file});
-        try {
-            console.log("start to wait for worker loading");
-
-            const cameraParameters = scene ? defaultCameraParameters[scene] : {}
-            if (cam == null) cam = new Camera(cameraParameters)
-
-            allGaussians.gaussians.count = 0;
-            allGaussians.gaussians.colors = [];
-            allGaussians.gaussians.cov3Ds = [];
-            allGaussians.gaussians.opacities = [];
-            allGaussians.gaussians.positions = [];
-            worker.postMessage(allGaussians);
-            gizmoRenderer.render();
-            console.log("clear the previous data and reload the scene");
-            load_finish=false;
-            load_worker.postMessage({scene, file});
-
-            // start replaying when the client is receiving the data
-            // cam.startPathReplay();
-        } catch (error) {
-            console.error('Error loading scene in main.js:', error);
-            return;
-        }
-    }
-    else if (file != null) {
-        contentLength = file.size
-        reader = file.stream().getReader()
-        settings.scene = 'custom'
-    } else {
-        throw new Error('No scene or file specified')
-    }
-}
 
 function requestRender(...params) {
     if (renderFrameRequest != null) 

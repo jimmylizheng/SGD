@@ -38,7 +38,6 @@ onmessage = function (event) {
             // use EventSource to process SSE stream
             const eventSource = new EventSource(url);
             
-            // TODO: [Violation] 'message' handler took <N>ms
             eventSource.onmessage = function(event) {                
                 // parse the received data for each batch
                 const responseData = JSON.parse(event.data);
@@ -46,15 +45,15 @@ onmessage = function (event) {
 
                 // append new data to current data
                 allGaussians.gaussians.count += responseData.gaussians.count;
-                allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
-                allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
-                allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
-                allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
+                // allGaussians.gaussians.colors = allGaussians.gaussians.colors.concat(responseData.gaussians.colors);
+                // allGaussians.gaussians.cov3Ds = allGaussians.gaussians.cov3Ds.concat(responseData.gaussians.cov3Ds);
+                // allGaussians.gaussians.opacities = allGaussians.gaussians.opacities.concat(responseData.gaussians.opacities);
+                // allGaussians.gaussians.positions = allGaussians.gaussians.positions.concat(responseData.gaussians.positions);
 
                 allGaussians.gaussians.gaussianCount = allGaussians.gaussians.count 
                 // **update sceneMin and sceneMax for each batch**
-                allGaussians.gaussians.sceneMin = responseData.gaussians.sceneMin
-                allGaussians.gaussians.sceneMax = responseData.gaussians.sceneMax
+                // allGaussians.gaussians.sceneMin = responseData.gaussians.sceneMin
+                // allGaussians.gaussians.sceneMax = responseData.gaussians.sceneMax
 
                 partialGaussians.gaussians.count = responseData.gaussians.count;
                 partialGaussians.gaussians.colors = responseData.gaussians.colors;

@@ -21,6 +21,10 @@ onmessage = function(event) {
         data.cov3Db = new Float32Array(gaussians.count * 3)
         data.colors = new Float32Array(gaussians.count * 3)
         const sortTime = 0
+        // possible bugs
+        // postMessage({
+        //     data, sortTime,
+        // })
         if (gaussians.totalCount==0){
             postMessage({
                 data, sortTime,
