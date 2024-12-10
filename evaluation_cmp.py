@@ -56,8 +56,8 @@ def compute_metrics(dir1, dir2):
         print("No valid image pairs found.")
 
 # Define directories
-dir1 = "dir1"  # Replace with the path to dir1
-dir2 = "dir2"  # Replace with the path to dir2
+dir1 = "data/groundtruth"  # Replace with the path to dir1
+dir2 = "data/"  # Replace with the path to dir2
 
 # Call the function
 compute_metrics(dir1, dir2)
