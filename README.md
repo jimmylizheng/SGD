@@ -6,39 +6,31 @@ for Real-Time Radiance Field Rendering](https://repo-sam.inria.fr/fungraph/3d-ga
 ## Quick Start
 Clone the project to your local machine.
 
-Run the command "python3 app.py" in your CLI to launch the server.
+Download the `.ply` file containing the Gaussian splats using the following command and put it at the root directory of the project (you can use wget <URL_TO_PLY_FILE>).
+
+Use processData.py to convert the .ply file into a .json file: "python3 processData.py" (need to change the utility functions and output directory following the comments in the code).
+
+Run the command "python3 app.py" in your CLI to launch the server (need to change the directory of the generated .json file and server parameters following the comments in the code).
 
 Run the command "python3 -m http.server 8000" in your CLI to launch the client.
 
 Access the client rendering result through "http://localhost:8000/"
 
-## Step-by-Step Guide
+Follow the GUI's instruction to navigate around the scene.
 
-### 
-1. Prepare the Gaussian Data
-Download the `.ply` file containing the Gaussian splats using the following command:
-wget <URL_TO_PLY_FILE>
+## Evaluation Guide
 
-2. Process the Data
-Use processData.py to convert the .ply file into a .json file:
-python3 processData.py
+To collect user traces, click "Start Logging" to start logging the path. Click "Save Path" to save the logged path.
 
-3. Configure the Backend
-Edit app.py to point to the generated .json file by modifying the name of the relevant variable:
-with open('brightness_rooms.json', 'r') as file
+Click "Load Path" to load the recorded path.
 
-4. Run the Flask Backend
-Start the backend server with the following command:
-python3 -m http.server 8000
+Click "Start Replay" to replay the loaded path with scalable loading and the program will automatically take screenshots for evaluation.
 
-6. Access the Client
-Open your web browser and navigate to the following URL to view the rendering:
-http://localhost:8000/
+Run "python3 evaluation.py" to compute the evaluation result. Follow the comments in evaluation.py to modify the data directories.
 
-## Background
+Run "python3 bar_plot.py" to plot the evaluation results. Change the corresponding values in the code based on the evaluation.py's output.
 
-I wanted to get a better understanding on how 3D gaussians splats are used in rasterization pipelines to achieve real time results, so I tried to reimplement the rendering algorithm in a framework I'm familiar with (WebGL).
-The next step if I find the time will be to make a WebGPU version too in order to compare the performances.
+Run "python3 dist_plot.py" to plot the cdf of splat attributes.
 
 ## Implementation Details
 
@@ -64,10 +56,6 @@ Fortunately, not all of the harmonics coefficients are necessary to compute the 
 All degrees above 0 are view-dependant and the color for each gaussian needs to be recomputed each time the view matrix is updated.
 Using degree 0 for this implementation is clearly the best in term of performances as it avoid sending any spherical harmonic to the GPU, and allow to pre-compute the gaussian color as a one-time operation before rendering.
 The visual impact is clearly negligible compared to the performance gain.
-
-#### Sorting
-
-(WIP)
 
 ## Code Structure
 
