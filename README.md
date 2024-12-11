@@ -90,3 +90,6 @@ for Real-Time Radiance Field Rendering)
 - [Webgl Splat Renderer by antimatter15](https://github.com/antimatter15/splat): clean and concise implementation with no external library from which are coming many optimizations related to sorting (web-worker, view matrix difference treshold, count sort)
 
 - [3D Gaussian Splatting Web Viewer](https://github.com/kishimisu/Gaussian-Splatting-WebGL): Original code base that this project based on.
+
+## Authors
+Zheng Li (jimmyli@umich.edu), Tao Wei (taowe@umich.edu), Zhengwei Wang (antwzw@umich.edu)
